@@ -1,5 +1,5 @@
-import { MultiplyApp } from "@/components/multiply-app"
+import { MultiplyAppClient } from "@/components/multiply-app-client"
 
 export default function Page() {
-  return <MultiplyApp />
+  return <MultiplyAppClient />
 }

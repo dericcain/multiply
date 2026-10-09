@@ -1,0 +1,37 @@
+.content[data-slot="sheet-content"] {
+  top: 50%;
+  left: 50%;
+  bottom: auto;
+  translate: -50% -50%;
+  transform: none;
+  width: min(28rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  gap: 0;
+}
+
+.header[data-slot="sheet-header"] {
+  padding: 1.5rem 1.5rem 0.5rem;
+}
+
+.form {
+  display: grid;
+  gap: 1.25rem;
+  padding: 1rem 1.5rem 1.5rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.625rem;
+  min-width: 0;
+}
+
+.sliderField {
+  display: grid;
+  gap: 0.875rem;
+  min-width: 0;
+}
+
+.saveButton {
+  margin-top: 0.5rem;
+}
