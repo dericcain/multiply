@@ -197,16 +197,6 @@ version = '18.6-20260930-1'
 [postgres.resources.storage]
 capacity = 1
 
-[provider]
-[provider.smtp]
-host = 'smtp-relay.brevo.com'
-user = 'bda6d4001@smtp-brevo.com'
-password = '{{ secrets.BREVO_SMTP_KEY }}'
-sender = 'noreply@playmultiply.com'
-port = 587
-secure = false
-method = 'LOGIN'
-
 [storage]
 version = '0.15.1'
 
