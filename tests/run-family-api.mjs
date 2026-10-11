@@ -57,7 +57,8 @@ try {
     ('${ids.parent}','{"players":[{"id":"original","name":"Original child","maxTable":5,"maxMultiplier":5}],"stats":{},"sessions":[]}');`
   const oldMigration = await readFile(new URL("../nhost/migrations/default/20261004000000_create_multiply_profiles/up.sql", import.meta.url), "utf8")
   const migration = await readFile(new URL("../nhost/migrations/default/20261011000000_shared_families/up.sql", import.meta.url), "utf8")
-  execFileSync("docker", ["exec", "-i", pg, "psql", "-U", "postgres", "-v", "ON_ERROR_STOP=1"], { input: [fixture, oldMigration, legacy, migration].join("\n"), stdio: ["pipe", "pipe", "pipe"] })
+  const durableXpMigration = await readFile(new URL("../nhost/migrations/default/20261011010000_durable_xp/up.sql", import.meta.url), "utf8")
+  execFileSync("docker", ["exec", "-i", pg, "psql", "-U", "postgres", "-v", "ON_ERROR_STOP=1"], { input: [fixture, oldMigration, legacy, migration, durableXpMigration].join("\n"), stdio: ["pipe", "pipe", "pipe"] })
   docker("run", "-d", "--rm", "--name", engine, "--network", name, "-p", "127.0.0.1::8080", "-e", `HASURA_GRAPHQL_DATABASE_URL=postgres://postgres:${password}@${pg}:5432/postgres`, "-e", `HASURA_GRAPHQL_ADMIN_SECRET=${admin}`, "-e", `HASURA_GRAPHQL_JWT_SECRET=${JSON.stringify({ type: "HS256", key: jwtKey })}`, "-e", "HASURA_GRAPHQL_DEV_MODE=false", "hasura/graphql-engine:v2.48.10-ce")
   endpoint = `http://${docker("port", engine, "8080/tcp")}`
   ready = false
@@ -73,6 +74,7 @@ try {
   const owner = await action("owner", "load"), original = await action("parent", "load")
   const familyId = owner.family.id
   assert.equal(owner.data.preserveMe, true)
+  assert.equal(owner.data.xp.child, 1, "opening XP is returned through the tracked Hasura mutation")
   await assert.rejects(action("outsider", "load", { familyId }), { code: "42501", message: "Family access denied" })
   const invite = await action("owner", "invite", { familyId, email: "PARENT@example.test" })
   await assert.rejects(action("outsider", "accept_invitation", { token: invite.token }), /verified invited email/)
@@ -82,11 +84,15 @@ try {
   assert.equal((await action("parent", "load", { familyId: original.family.id })).data.players[0].name, "Original child")
   await assert.rejects(action("parent", "invite", { familyId, email: "outsider@example.test" }), /Only the family owner/)
   const game = id => ({ id, playerId: "child", mode: "practice", answerMode: "choice", table: 1, maxMultiplier: 5, date: Date.now(), results: [{ table: 1, multiplier: 1, correct: true }] })
-  await Promise.all(Array.from({ length: 10 }, (_, i) => action(i % 2 ? "parent" : "owner", "save_session", { familyId, gameSession: game(`concurrent-${i}`) })))
+  const concurrentAwards = await Promise.all(Array.from({ length: 10 }, (_, i) => action(i % 2 ? "parent" : "owner", "save_session", { familyId, gameSession: game(`concurrent-${i}`) })))
   let loaded = await action("parent", "load", { familyId })
   assert.equal(loaded.data.stats["child:1x1"].attempts, 12)
   assert.equal(loaded.data.stats["child:1x1"].correct, 11)
-  await action("parent", "save_session", { familyId, gameSession: game("concurrent-0") })
+  assert.equal(concurrentAwards.reduce((sum, result) => sum + result.award.totalXp, 0), 35, "concurrent sessions award ten answer XP and one first-mastery bonus")
+  assert.equal(loaded.data.xp.child, 36, "opening and earned XP are returned as the authoritative balance")
+  assert.deepEqual(loaded.data.awardedFacts.child, ["1x1"])
+  const duplicate = await action("parent", "save_session", { familyId, gameSession: game("concurrent-0") })
+  assert.deepEqual(duplicate.award, concurrentAwards[0].award, "duplicate session returns the original award")
   assert.equal((await action("owner", "load", { familyId })).data.stats["child:1x1"].attempts, 12)
   await Promise.all(["owner", "parent"].map(user => action(user, "save_player", { familyId, player: { id: user, name: user, maxTable: 5, maxMultiplier: 5 } })))
   assert.equal((await action("owner", "load", { familyId })).data.players.length, 3)
@@ -100,7 +106,7 @@ try {
   const canceled = await action("owner", "invite", { familyId, email: "parent@example.test" })
   await action("owner", "cancel_invitation", { familyId, invitationId: canceled.id })
   await assert.rejects(action("parent", "accept_invitation", { token: canceled.token }), /unavailable or expired/)
-  console.log("Shared-family API checks passed: real JWT identity, production errors, concurrent games/players, retry idempotence, invitations, family isolation, access removal.")
+  console.log("Shared-family API checks passed: real JWT identity, production errors, concurrent games and XP awards, authoritative opening balances, retry idempotence, invitations, family isolation, access removal.")
 } finally {
   for (const container of [engine, pg]) { try { docker("rm", "-f", container) } catch {} }
   try { docker("network", "rm", name) } catch {}

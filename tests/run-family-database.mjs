@@ -26,9 +26,11 @@ try {
     readFile(new URL("../nhost/migrations/default/20261004000000_create_multiply_profiles/up.sql", import.meta.url), "utf8"),
     readFile(new URL("../nhost/migrations/default/20261011000000_shared_families/up.sql", import.meta.url), "utf8"),
     readFile(new URL("family-database.sql", import.meta.url), "utf8"),
+    readFile(new URL("../nhost/migrations/default/20261011010000_durable_xp/up.sql", import.meta.url), "utf8"),
+    readFile(new URL("gamification-database.sql", import.meta.url), "utf8"),
   ])
-  command("psql", ["-d", database, "-v", "ON_ERROR_STOP=1"], [fixture, files[0], legacy, files[1], files[2]].join("\n"))
-  console.log("Shared-family database assertions passed: migration, permissions, invitations, independent saves, retries, eviction, and access removal.")
+  command("psql", ["-d", database, "-v", "ON_ERROR_STOP=1"], [fixture, files[0], legacy, files[1], files[2], files[3], files[4]].join("\n"))
+  console.log("Shared-family database assertions passed: migration, permissions, invitations, independent saves, retries, eviction, access removal, durable XP, mastery loss/recovery, scope changes, and award retries.")
 } finally {
   command("dropdb", [database])
 }
