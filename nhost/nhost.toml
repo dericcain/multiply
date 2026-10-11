@@ -39,7 +39,7 @@ version = '0.52.0'
 mode = 'disabled'
 
 [auth.redirections]
-clientUrl = 'http://localhost:3000'
+clientUrl = 'https://multiply-five-indol.vercel.app'
 
 [auth.signUp]
 enabled = true
