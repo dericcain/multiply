@@ -25,7 +25,20 @@ const fisherYates = items => { const copy = [...items]; for (let i = copy.length
 const pct = (right, total) => total ? Math.round(right / total * 100) : 0
 
 
-function Shell({ player, xp = 0, pendingXp = 0, back, settings, children }) { return <main className="mx-auto min-h-dvh max-w-xl bg-background px-4 pb-9 sm:shadow-2xl"><header className="flex h-20 items-center justify-between">{back ? <Button variant="ghost" size="icon" aria-label="Go back" className="size-11 rounded-2xl" onClick={back}><ChevronLeft className="size-5" /></Button> : <div className="size-11" aria-hidden="true" />}<MultiplyLogo />{settings ? <Button variant="ghost" size="icon" aria-label="Settings" title="Settings" className="size-11 rounded-2xl" onClick={settings}><Settings className="size-5" aria-hidden="true" /></Button> : player ? <div className="grid size-10 place-items-center rounded-2xl bg-[var(--coral)] font-black text-white">{player.name[0]}</div> : <div className="size-11" />}</header><section>{player && <div className="mb-5 flex items-center gap-3 rounded-2xl bg-muted p-3"><span aria-hidden="true" className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary text-lg font-black text-primary-foreground">{player.name[0]}</span><div className="min-w-0 flex-1"><p className="break-words font-black">{player.name}</p><p className="text-sm font-bold">{xp.toLocaleString()} XP{pendingXp > 0 && <span className="ml-2">+{pendingXp} pending</span>}</p></div></div>}{children}</section></main> }
+function Shell({ player, xp = 0, pendingXp = 0, back, settings, children }) {
+  return (
+    <main className="mx-auto min-h-dvh max-w-xl bg-background px-4 pb-9 sm:shadow-2xl">
+      <header className="flex h-20 items-center gap-2">
+        {back && <Button variant="ghost" size="icon" aria-label="Go back" className="size-11 shrink-0 rounded-2xl" onClick={back}><ChevronLeft className="size-5" /></Button>}
+        <MultiplyLogo />
+        <div className="ml-auto shrink-0">
+          {settings ? <Button variant="ghost" size="icon" aria-label="Settings" title="Settings" className="size-11 rounded-2xl" onClick={settings}><Settings className="size-5" aria-hidden="true" /></Button> : player ? <div className="grid size-10 place-items-center rounded-2xl bg-[var(--coral)] font-black text-white">{player.name[0]}</div> : null}
+        </div>
+      </header>
+      <section>{player && <div className="mb-5 flex items-center gap-3 rounded-2xl bg-muted p-3"><span aria-hidden="true" className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary text-lg font-black text-primary-foreground">{player.name[0]}</span><div className="min-w-0 flex-1"><p className="break-words font-black">{player.name}</p><p className="text-sm font-bold">{xp.toLocaleString()} XP{pendingXp > 0 && <span className="ml-2">+{pendingXp} pending</span>}</p></div></div>}{children}</section>
+    </main>
+  )
+}
 function Title({ children, subtitle }) { return <><h1 className="font-[family-name:var(--font-display)] text-4xl font-black tracking-tight text-foreground">{children}</h1>{subtitle && <p className="mt-1 text-base font-semibold text-muted-foreground">{subtitle}</p>}</> }
 
 export function MultiplyApp() {

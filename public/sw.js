@@ -1,12 +1,12 @@
-const CACHE = 'multiply-offline-v1'
+const CACHE = 'multiply-offline-v2'
 const OFFLINE_URL = '/offline.html'
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll([
     OFFLINE_URL,
     '/multiply-logo.svg',
-    '/icons/icon-192.png',
-    '/icons/icon-512.png',
+    '/icons/icon-192.png?v=2',
+    '/icons/icon-512.png?v=2',
   ])))
 })
 

@@ -12,8 +12,8 @@ export const metadata: Metadata = {
   applicationName: "Multiply!",
   appleWebApp: { capable: true, title: "Multiply!", statusBarStyle: "default" },
   icons: {
-    icon: [{ url: "/multiply-logo.svg", type: "image/svg+xml" }, { url: "/icons/icon-32.png", sizes: "32x32", type: "image/png" }],
-    apple: [{ url: "/icons/icon-180.png", sizes: "180x180", type: "image/png" }],
+    icon: [{ url: "/icons/icon-32.png?v=2", sizes: "32x32", type: "image/png" }],
+    apple: [{ url: "/icons/icon-180.png?v=2", sizes: "180x180", type: "image/png" }],
   },
 }
 
