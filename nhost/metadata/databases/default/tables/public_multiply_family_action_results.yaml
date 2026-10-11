@@ -1,0 +1,11 @@
+table:
+  name: multiply_family_action_results
+  schema: public
+select_permissions:
+  - role: user
+    permission:
+      columns:
+        - result
+      filter:
+        user_id:
+          _eq: X-Hasura-User-Id

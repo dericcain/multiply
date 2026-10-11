@@ -39,7 +39,7 @@ version = '0.52.0'
 mode = 'disabled'
 
 [auth.redirections]
-clientUrl = 'https://multiply-five-indol.vercel.app'
+clientUrl = 'https://playmultiply.com'
 
 [auth.signUp]
 enabled = true

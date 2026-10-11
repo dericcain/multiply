@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test": "node --test tests/*.test.mjs",
+    "test:database": "node tests/run-family-database.mjs",
+    "test:api": "node tests/run-family-api.mjs"
   },
   "dependencies": {
     "@nhost/nhost-js": "^4.9.0",

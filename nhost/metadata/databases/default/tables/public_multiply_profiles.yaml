@@ -1,3 +1,5 @@
+# Legacy data remains available to its owner for recovery. All gameplay writes
+# now use multiply_family_action; old full-profile writes must stop at rollout.
 table:
   name: multiply_profiles
   schema: public
@@ -9,26 +11,5 @@ select_permissions:
         - data
         - updated_at
       filter:
-        user_id:
-          _eq: X-Hasura-User-Id
-insert_permissions:
-  - role: user
-    permission:
-      check:
-        user_id:
-          _eq: X-Hasura-User-Id
-      set:
-        user_id: x-hasura-user-id
-      columns:
-        - data
-update_permissions:
-  - role: user
-    permission:
-      columns:
-        - data
-      filter:
-        user_id:
-          _eq: X-Hasura-User-Id
-      check:
         user_id:
           _eq: X-Hasura-User-Id
