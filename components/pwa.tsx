@@ -1,0 +1,61 @@
+"use client"
+
+import { useEffect, useState } from "react"
+import { Button } from "@/components/ui/button"
+
+interface InstallEvent extends Event {
+  prompt(): Promise<void>
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>
+}
+
+export function Pwa() {
+  const [installEvent, setInstallEvent] = useState<InstallEvent | null>(null)
+  const [showIosHelp, setShowIosHelp] = useState(false)
+
+  useEffect(() => {
+    if ("serviceWorker" in navigator && process.env.NODE_ENV === "production") {
+      navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" })
+        .catch(error => console.error("Could not register offline support", error))
+    }
+
+    const standalone = window.matchMedia("(display-mode: standalone)").matches ||
+      (navigator as Navigator & { standalone?: boolean }).standalone
+    if (standalone) return
+
+    setShowIosHelp(/iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1))
+    const offerInstall = (event: Event) => {
+      event.preventDefault()
+      setInstallEvent(event as InstallEvent)
+    }
+    const installed = () => {
+      setInstallEvent(null)
+      setShowIosHelp(false)
+    }
+    window.addEventListener("beforeinstallprompt", offerInstall)
+    window.addEventListener("appinstalled", installed)
+    return () => {
+      window.removeEventListener("beforeinstallprompt", offerInstall)
+      window.removeEventListener("appinstalled", installed)
+    }
+  }, [])
+
+  async function install() {
+    if (!installEvent) return
+    await installEvent.prompt()
+    await installEvent.userChoice
+    setInstallEvent(null)
+  }
+
+  if (!installEvent && !showIosHelp) return null
+
+  return (
+    <aside aria-label="Install Multiply!" className="mx-auto max-w-xl bg-background px-4 pb-6 text-center">
+      {installEvent ? (
+        <Button variant="secondary" className="rounded-2xl" onClick={install}>Install Multiply!</Button>
+      ) : (
+        <p className="text-sm text-muted-foreground">To install Multiply!, tap Share, then Add to Home Screen.</p>
+      )}
+    </aside>
+  )
+}
