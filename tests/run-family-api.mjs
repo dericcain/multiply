@@ -2,6 +2,7 @@ import assert from "node:assert/strict"
 import { execFileSync } from "node:child_process"
 import { createHmac, randomUUID } from "node:crypto"
 import { readFile, writeFile } from "node:fs/promises"
+import { familyStandings, rankStandings } from "../lib/progression.js"
 import { withFamilyMetadata } from "../scripts/apply-family-metadata.mjs"
 
 // Real PostgreSQL + Hasura integration, isolated from application databases.
@@ -59,7 +60,8 @@ try {
   const migration = await readFile(new URL("../nhost/migrations/default/20261011000000_shared_families/up.sql", import.meta.url), "utf8")
   const durableXpMigration = await readFile(new URL("../nhost/migrations/default/20261011010000_durable_xp/up.sql", import.meta.url), "utf8")
   const childLinksMigration = await readFile(new URL("../nhost/migrations/default/20261011020000_child_practice_links/up.sql", import.meta.url), "utf8")
-  execFileSync("docker", ["exec", "-i", pg, "psql", "-U", "postgres", "-v", "ON_ERROR_STOP=1"], { input: [fixture, oldMigration, legacy, migration, durableXpMigration, childLinksMigration].join("\n"), stdio: ["pipe", "pipe", "pipe"] })
+  const childStandingsMigration = await readFile(new URL("../nhost/migrations/default/20261011030000_child_family_standings/up.sql", import.meta.url), "utf8")
+  execFileSync("docker", ["exec", "-i", pg, "psql", "-U", "postgres", "-v", "ON_ERROR_STOP=1"], { input: [fixture, oldMigration, legacy, migration, durableXpMigration, childLinksMigration, childStandingsMigration].join("\n"), stdio: ["pipe", "pipe", "pipe"] })
   docker("run", "-d", "--rm", "--name", engine, "--network", name, "-p", "127.0.0.1::8080", "-e", `HASURA_GRAPHQL_DATABASE_URL=postgres://postgres:${password}@${pg}:5432/postgres`, "-e", `HASURA_GRAPHQL_ADMIN_SECRET=${admin}`, "-e", `HASURA_GRAPHQL_JWT_SECRET=${JSON.stringify({ type: "HS256", key: jwtKey })}`, "-e", "HASURA_GRAPHQL_DEV_MODE=false", "-e", "HASURA_GRAPHQL_UNAUTHORIZED_ROLE=public", "hasura/graphql-engine:v2.48.10-ce")
   endpoint = `http://${docker("port", engine, "8080/tcp")}`
   ready = false
@@ -124,11 +126,36 @@ try {
   assert.match(childLink.token, /^[a-f0-9]{64}$/)
   let childSnapshot = await practice(childLink.token)
   assert.deepEqual(childSnapshot.data.players.map(p => p.id), ["child"])
-  assert.deepEqual(Object.keys(childSnapshot).sort(), ["data", "family", "userId"])
+  assert.deepEqual(Object.keys(childSnapshot).sort(), ["data", "family", "standings", "userId"])
   assert.deepEqual(Object.keys(childSnapshot.family), ["id"])
   assert.deepEqual(Object.keys(childSnapshot.data.xp), ["child"])
   assert.equal(childSnapshot.data.preserveMe, undefined)
   assert.equal(JSON.stringify(childSnapshot).includes("owner@example.test"), false)
+  assert.deepEqual(childSnapshot.standings.map(row => row.player.id).sort(), ["child", "owner", "parent"])
+  for (const row of childSnapshot.standings) {
+    assert.deepEqual(Object.keys(row).sort(), ["count", "hasEvidence", "player", "total", "xp"])
+    assert.deepEqual(Object.keys(row.player).sort(), ["id", "maxMultiplier", "maxTable", "name"])
+  }
+  // A sibling game changes the read-only standings, never the child's playable
+  // roster, fact histories, sessions, or awards. Foreign families stay excluded.
+  await action("owner", "save_session", { familyId, gameSession: {
+    ...game("sibling-game"), playerId: "owner",
+    results: Array.from({ length: 5 }, () => ({ table: 1, multiplier: 1, correct: true })),
+  } })
+  childSnapshot = await practice(childLink.token)
+  const sibling = childSnapshot.standings.find(row => row.player.id === "owner")
+  assert.equal(sibling.xp, 30)
+  assert.equal(sibling.count, 1)
+  assert.equal(sibling.total, 25)
+  assert.equal(sibling.hasEvidence, true)
+  const ranked = rows => rows.map(row => [row.player.id, row.xp, row.count, row.total, row.rank])
+  assert.deepEqual(ranked(rankStandings(childSnapshot.standings)), ranked(familyStandings((await action("owner", "load", { familyId })).data)))
+  assert.deepEqual(childSnapshot.data.players.map(player => player.id), ["child"])
+  assert.ok(Object.keys(childSnapshot.data.stats).every(key => key.startsWith("child:")))
+  assert.ok(childSnapshot.data.sessions.every(session => session.playerId === "child"))
+  assert.deepEqual(Object.keys(childSnapshot.data.awardedFacts), ["child"])
+  assert.equal(JSON.stringify(childSnapshot).includes("Original child"), false)
+  assert.equal(JSON.stringify(childSnapshot).includes("sibling-game"), false)
   assert.equal((await practice("a".repeat(64))).error.code, "42501")
   assert.equal((await practice(childLink.token, "save_player")).error.code, "22023")
   assert.equal((await practice(childLink.token, "save_session", { ...game("wrong-child"), playerId: "owner" })).error.code, "22023")
@@ -137,6 +164,8 @@ try {
   const childGame = game("phone-game")
   const saved = await practice(childLink.token, "save_session", childGame)
   assert.equal(saved.data.xp.child, balanceBefore + 1)
+  assert.equal(saved.standings.find(row => row.player.id === "child").xp, saved.data.xp.child)
+  assert.equal(saved.standings.find(row => row.player.id === "owner").xp, 30)
   assert.deepEqual((await practice(childLink.token, "save_session", childGame)).award, saved.award)
   assert.equal((await action("owner", "load", { familyId })).data.xp.child, saved.data.xp.child)
   const replacement = (await linkAction("owner", "create")).link
@@ -152,6 +181,16 @@ try {
   assert.deepEqual(publicResults.data.multiply_practice_action_results, [])
   console.log("Child practice API checks passed: anonymous token access, private snapshots, player/range isolation, parent-visible progress, XP retry idempotence, replacement, revocation, and restricted public schema.")
   console.log("Shared-family API checks passed: real JWT identity, production errors, concurrent games and XP awards, authoritative opening balances, retry idempotence, invitations, family isolation, access removal.")
+  const standingsRollback = await readFile(new URL("../nhost/migrations/default/20261011030000_child_family_standings/down.sql", import.meta.url), "utf8")
+  const rollbackLink = (await linkAction("owner", "create")).link
+  const beforeRollback = await practice(rollbackLink.token)
+  execFileSync("docker", ["exec", "-i", pg, "psql", "-U", "postgres", "-v", "ON_ERROR_STOP=1"], { input: standingsRollback, stdio: ["pipe", "pipe", "pipe"] })
+  const afterRollback = await practice(rollbackLink.token)
+  assert.equal(afterRollback.standings, undefined)
+  assert.deepEqual(afterRollback.data, beforeRollback.data, "rollback preserves linked player progress")
+  execFileSync("docker", ["exec", "-i", pg, "psql", "-U", "postgres", "-v", "ON_ERROR_STOP=1"], { input: childStandingsMigration, stdio: ["pipe", "pipe", "pipe"] })
+  assert.deepEqual((await practice(rollbackLink.token)).standings, beforeRollback.standings)
+  console.log("Child standings checks passed: family-only summaries, shared mastery ranks, saved XP updates, private histories, and reversible migration.")
   if (process.env.MULTIPLY_BROWSER_FIXTURE) {
     const link = (await linkAction("owner", "create")).link
     await writeFile(process.env.MULTIPLY_BROWSER_FIXTURE, JSON.stringify({ endpoint, token: link.token, familyId, ownerSession: { accessToken: jwt("owner"), refreshToken: "local-fixture", accessTokenExpiresIn: 600, user: { id: ids.owner, email: "owner@example.test" }, decodedToken: { exp: Date.now() + 600000 } } }), { mode: 0o600 })

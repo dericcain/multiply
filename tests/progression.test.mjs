@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { playerProgress, familyStandings, isMastered } from '../lib/progression.js'
+import { playerProgress, familyStandings, rankStandings, isMastered } from '../lib/progression.js'
 
 const mastered = { correct: 4, attempts: 5, recent: [true, true, true, true, false] }
 const scope = (maxTable, maxMultiplier = maxTable) => ({ maxTable, maxMultiplier })
@@ -85,4 +85,19 @@ test('XP comes from the server balance and is independent of current mastery', (
   assert.equal(beforeLoss.xp, 42)
   assert.equal(afterLoss.xp, 42)
   assert.equal(afterLoss.count, 0)
+})
+
+test('child summaries preserve exact family ranks, XP leaders, and checkpoints without histories', () => {
+  const summaries = [
+    { player: { id: 'b', name: 'B' }, count: 80, total: 100, hasEvidence: true, xp: 1000 },
+    { player: { id: 'a', name: 'A' }, count: 20, total: 25, hasEvidence: true, xp: 26 },
+    { player: { id: 'c', name: 'C' }, count: 0, total: 25, hasEvidence: false, xp: 2 },
+  ]
+  const rows = rankStandings(summaries)
+  assert.deepEqual(rows.map(row => [row.player.id, row.rank]), [['a', 1], ['b', 1], ['c', null]])
+  assert.equal(rows[1].xpLeader, true)
+  assert.equal(rows[0].xpCheckpoint, 1)
+  assert.equal(rows[0].xpCheckpointPercent, 4)
+  assert.equal(summaries[0].rank, undefined, 'sorting does not mutate server summaries')
+  assert.equal(rankStandings([summaries[0]])[0].solo, true)
 })

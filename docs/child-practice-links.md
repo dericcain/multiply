@@ -1,6 +1,6 @@
 # Child practice links
 
-In Settings → Kids’ practice links, create a link for each player and copy it or use the phone’s share sheet. Opening it goes straight to that child’s activities without a parent account. Games, mastery, and XP save into the same family the parents see. The child cannot switch players, edit learning settings, manage parents, or see sibling or parent data.
+In Settings → Kids’ practice links, create a link for each player and copy it or use the phone’s share sheet. Opening it goes straight to that child’s activities without a parent account. Games, mastery, and XP save into the same family the parents see. The child cannot switch players, edit learning settings, manage parents, or see other players’ answer histories or parent data. Their activity page and Family leaderboard show players in the same family with XP and mastery progress, highlighting their own row. Mastery percentage determines rank; XP shows effort.
 
 Links remain enabled until a parent disables or replaces them. Copy the secret link when it is created; only its hash is stored on the server. Replacing a link immediately disables the previous link, so send the replacement to the child. Anyone who has a link can practice as that child. Disabling access preserves all learning history.
 
@@ -15,6 +15,12 @@ The secret is in a URL fragment (`/#play=…`), keeping it out of navigation req
 3. Confirm Nhost accepts unauthenticated GraphQL calls with the `public` role. For standalone Hasura, configure `HASURA_GRAPHQL_UNAUTHORIZED_ROLE=public`. An anonymous call may execute only `multiply_practice_action`; the database requires a valid link for both loading and saving.
 4. Deploy the frontend using normal Next.js hosting. Static export has been removed because `/api/practice` needs a server runtime. Remove any hosting override that publishes the old `out/` directory; use the framework’s default output. Existing Nhost subdomain, region, and optional GraphQL override still apply. No new secret is required in the frontend host.
 5. Refresh open parent browsers. Create separate links for both children, open each on its phone, complete a round, check progress in the parent view, and disable a link to confirm access is blocked. Test the actual phone allowlist as its platform behavior cannot be reproduced by local browser checks.
+
+## Family leaderboard rollout
+
+Apply `nhost/migrations/default/20261011030000_child_family_standings/up.sql` after the child-links migration, then deploy the frontend. The existing practice RPC returns a separate `standings` summary with player names, assigned ranges, XP, mastered counts, and whether there is enough evidence to rank. Playable players, sessions, fact histories, and mastery awards remain limited to the linked child. No Hasura metadata change is required. Standings update after saved rounds and through the existing 30-second refresh and tab-focus refresh. The rollback restores player-only responses without deleting links or progress.
+
+Local verification covered real PostgreSQL and anonymous Hasura responses, family isolation, sibling-history isolation, matching parent/child ranks, XP updates, and rollback followed by reapplication. A production build using `npm run build -- --webpack` passed. Chromium checks at 390px and 320px covered child entry, all family XP, the highlighted child row, leaderboard/back navigation, a saved practice round updating XP, and absence of settings access and page errors. The default Turbopack build encountered an environment port-binding failure. These changes have not been deployed.
 
 ## Verification
 

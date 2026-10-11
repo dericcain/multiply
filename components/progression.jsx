@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { familyStandings } from "@/lib/progression"
+import { familyStandings, rankStandings } from "@/lib/progression"
 import styles from "./progression.module.css"
 
 export function Journey({ progress, nextStat }) {
@@ -10,9 +10,9 @@ export function Journey({ progress, nextStat }) {
   return <Card className="mt-4 border-primary/20 bg-primary/5"><CardContent className="p-4"><div className="flex flex-wrap items-center justify-between gap-2"><h2 className="font-black">Your mastery goal</h2><b>{progress.hasEvidence ? `${Math.round(percentage)}% mastered` : "Getting started"}</b></div><Progress className="mt-3 h-3" value={percentage} aria-label={`${count} of ${total} assigned facts mastered`} /><p className="mt-2 text-sm font-semibold">{total ? `${count} / ${total} assigned facts mastered` : "Ask a parent to assign your tables."}</p><p className="mt-1 text-sm">{count === total && total ? "Finish line reached! Review your tables, or ask a parent for your next goal." : `Next goal: ${progress.nextTarget ? `master ${progress.nextTarget.label}` : "master one more fact"}.`}</p>{nextStat && <p className="mt-2 text-sm">Next fact: {Math.min(nextStat.recent?.length ?? 0, 5)}/5 responses recorded · {nextStat.recent?.length ? Math.round(nextStat.recent.filter(Boolean).length / nextStat.recent.length * 100) : 0}% correct in recent responses. Mastery needs at least 80%.</p>}</CardContent></Card>
 }
 
-export function FamilyStandings({ data, activePlayer }) {
+export function FamilyStandings({ data, standings, activePlayer }) {
   const [robot, setRobot] = useState(false)
-  const rows = familyStandings(data)
+  const rows = standings ? rankStandings(standings) : familyStandings(data)
   if (!rows.length) return <p className="mt-4 text-sm">Add a player to start a mastery goal.</p>
   if (rows.length === 1) {
     const row = rows[0], percentage = row.total ? row.count / row.total * 100 : 0
