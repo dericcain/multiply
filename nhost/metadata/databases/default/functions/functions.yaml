@@ -1,1 +1,3 @@
 - '!include public_multiply_family_action.yaml'
+- '!include public_multiply_player_link_action.yaml'
+- '!include public_multiply_practice_action.yaml'

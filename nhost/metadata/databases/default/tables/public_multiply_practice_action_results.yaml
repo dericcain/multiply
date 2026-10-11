@@ -1,0 +1,9 @@
+table:
+  name: multiply_practice_action_results
+  schema: public
+select_permissions:
+  - role: public
+    permission:
+      columns:
+        - result
+      filter: {}

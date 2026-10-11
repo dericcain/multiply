@@ -24,6 +24,15 @@ export function withFamilyMetadata(existing) {
     configuration: { exposed_as: "mutation", session_argument: "hasura_session" },
     permissions: [{ role: "user" }],
   })
+  source.tables = source.tables.filter(item => !(item.table?.schema === "public" && item.table?.name === "multiply_practice_action_results"))
+  source.tables.push({
+    table: { schema: "public", name: "multiply_practice_action_results" },
+    select_permissions: [{ role: "public", permission: { columns: ["result"], filter: {} } }],
+  })
+  for (const [name, role] of [["multiply_player_link_action", "user"], ["multiply_practice_action", "public"]]) {
+    source.functions = source.functions.filter(item => !(item.function?.schema === "public" && item.function?.name === name))
+    source.functions.push({ function: { schema: "public", name }, configuration: { exposed_as: "mutation", session_argument: "hasura_session" }, permissions: [{ role }] })
+  }
   return metadata
 }
 

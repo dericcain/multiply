@@ -25,3 +25,13 @@ test("refuses to apply against a missing or unexpected source", () => {
   assert.throws(() => withFamilyMetadata({ sources: [] }), /source/)
   assert.throws(() => withFamilyMetadata({ sources: [{ name: "default", kind: "postgres" }] }), /multiply_profiles/)
 })
+
+test("child practice exposes only its token-checked RPC to the public role", () => {
+  const merged = withFamilyMetadata({ version: 3, sources: [{ name: "default", kind: "postgres", tables: [{ table: { schema: "public", name: "multiply_profiles" } }] }] })
+  const source = merged.sources[0]
+  assert.deepEqual(source.functions.filter(fn => fn.permissions.some(p => p.role === "public")).map(fn => fn.function.name), ["multiply_practice_action"])
+  const practice = source.tables.find(table => table.table.name === "multiply_practice_action_results")
+  assert.deepEqual(practice.select_permissions, [{ role: "public", permission: { columns: ["result"], filter: {} } }])
+  assert.equal(practice.insert_permissions, undefined)
+  assert.equal(source.tables.some(table => table.table.name === "multiply_player_links"), false)
+})

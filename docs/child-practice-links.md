@@ -1,0 +1,25 @@
+# Child practice links
+
+In Settings → Kids’ practice links, create a link for each player and copy it or use the phone’s share sheet. Opening it goes straight to that child’s activities without a parent account. Games, mastery, and XP save into the same family the parents see. The child cannot switch players, edit learning settings, manage parents, or see sibling or parent data.
+
+Links remain enabled until a parent disables or replaces them. Copy the secret link when it is created; only its hash is stored on the server. Replacing a link immediately disables the previous link, so send the replacement to the child. Anyone who has a link can practice as that child. Disabling access preserves all learning history.
+
+Allow the app’s canonical domain (currently `playmultiply.com`) on the child’s phone, and create the link while visiting that domain. The browser loads practice through `/api/practice` on the same domain; Next.js forwards only token-checked practice operations to Nhost. No parent credentials or administrator secret are needed for this endpoint. Assets and fonts are served by the app. Wi-Fi-only phones work while connected to Wi-Fi. Initial loading and saving require internet; failed completed rounds stay in the existing per-link outbox across reload and can be retried without duplicate XP. This does not add offline app loading. If a parent reduces an assigned range while a round is unfinished, the server rejects an out-of-range save. The child can choose Use updated tables, confirm discarding that unsaved round, and reload the new assignment.
+
+The secret is in a URL fragment (`/#play=…`), keeping it out of navigation request URLs and referrer headers. It remains in the link/bookmark so refresh and repeat visits work. The app responds to fragment changes so opening a replacement in an existing tab selects the new link.
+
+## Rollout
+
+1. Apply `nhost/migrations/default/20261011020000_child_practice_links/up.sql` after the shared-family and durable-XP migrations. It adds link and RPC result tables and two functions; existing family data and XP are unchanged.
+2. Run the existing `scripts/apply-family-metadata.mjs` merge workflow with `HASURA_METADATA_URL` and `HASURA_GRAPHQL_ADMIN_SECRET`. It preserves unrelated Nhost metadata, adds the authenticated link-management RPC and the public practice RPC, and gives the public role select access only to a physically empty practice result table. The actual family and link tables stay untracked. Do not replace production metadata wholesale with repository fragments.
+3. Confirm Nhost accepts unauthenticated GraphQL calls with the `public` role. For standalone Hasura, configure `HASURA_GRAPHQL_UNAUTHORIZED_ROLE=public`. An anonymous call may execute only `multiply_practice_action`; the database requires a valid link for both loading and saving.
+4. Deploy the frontend using normal Next.js hosting. Static export has been removed because `/api/practice` needs a server runtime. Remove any hosting override that publishes the old `out/` directory; use the framework’s default output. Existing Nhost subdomain, region, and optional GraphQL override still apply. No new secret is required in the frontend host.
+5. Refresh open parent browsers. Create separate links for both children, open each on its phone, complete a round, check progress in the parent view, and disable a link to confirm access is blocked. Test the actual phone allowlist as its platform behavior cannot be reproduced by local browser checks.
+
+## Verification
+
+`npm test` includes URL-fragment, same-domain API, credential isolation, error handling, and metadata permission checks. `npm run test:api` creates disposable PostgreSQL 18 and Hasura 2.48.10 containers and exercises actual anonymous GraphQL permissions, private snapshots, wrong-player/range rejection, parent-visible XP, retry idempotence, replacement, revocation, and removed-parent isolation alongside existing family regressions.
+
+For local browser work, `MULTIPLY_BROWSER_FIXTURE=/tmp/multiply-browser-fixture.json npm run test:api` leaves the disposable test services running and writes a restricted local fixture with the endpoint, an enabled child token, and a temporary owner session. Interrupt the process to remove the containers; delete the fixture afterward. Point the development server’s `NEXT_PUBLIC_NHOST_GRAPHQL_URL` to the fixture endpoint plus `/v1/graphql`.
+
+Local browser verification at 390 × 844 covered direct child entry, a saved practice round, failed-save recovery after reload, parent-visible progress, creating a replacement, and rejection of the prior link. Browser practice traffic used only the app’s `/api/practice` endpoint. Disabling the replacement also blocked the child view. These are local checks; this feature has not been deployed to production.

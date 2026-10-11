@@ -54,3 +54,7 @@ Database, profile, metadata, and catalog-state recovery backups are stored local
 Two temporary accounts signed in through real Nhost authentication. Live browser checks exercised creating and accepting an invitation, viewing shared players, completing and saving practice, and owner removal. Live API checks verified ten concurrent game writes, duplicate retry idempotence, concurrent player edits, owner-only invitations, retained original families, canceled/reused invitation rejection, and blocked reads/writes after removal. Temporary accounts and their data were removed afterward. Invitation links remain manually shared; email delivery was not exercised.
 
 Function configuration and metadata merge behavior follow the official [Hasura function reference](https://hasura.io/docs/2.0/api-reference/syntax-defs/#function-configuration) and [metadata format](https://hasura.io/docs/2.0/migrations-metadata-seeds/metadata-format/).
+
+## Child access
+
+[Child practice links](child-practice-links.md) add a separate, revocable link per player. The latest frontend requires the child-link migration and updated metadata merge in addition to the migrations above. Child links grant practice access only; parent invitation links still require a verified parent account.

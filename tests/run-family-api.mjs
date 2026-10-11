@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { execFileSync } from "node:child_process"
 import { createHmac, randomUUID } from "node:crypto"
-import { readFile } from "node:fs/promises"
+import { readFile, writeFile } from "node:fs/promises"
 import { withFamilyMetadata } from "../scripts/apply-family-metadata.mjs"
 
 // Real PostgreSQL + Hasura integration, isolated from application databases.
@@ -58,8 +58,9 @@ try {
   const oldMigration = await readFile(new URL("../nhost/migrations/default/20261004000000_create_multiply_profiles/up.sql", import.meta.url), "utf8")
   const migration = await readFile(new URL("../nhost/migrations/default/20261011000000_shared_families/up.sql", import.meta.url), "utf8")
   const durableXpMigration = await readFile(new URL("../nhost/migrations/default/20261011010000_durable_xp/up.sql", import.meta.url), "utf8")
-  execFileSync("docker", ["exec", "-i", pg, "psql", "-U", "postgres", "-v", "ON_ERROR_STOP=1"], { input: [fixture, oldMigration, legacy, migration, durableXpMigration].join("\n"), stdio: ["pipe", "pipe", "pipe"] })
-  docker("run", "-d", "--rm", "--name", engine, "--network", name, "-p", "127.0.0.1::8080", "-e", `HASURA_GRAPHQL_DATABASE_URL=postgres://postgres:${password}@${pg}:5432/postgres`, "-e", `HASURA_GRAPHQL_ADMIN_SECRET=${admin}`, "-e", `HASURA_GRAPHQL_JWT_SECRET=${JSON.stringify({ type: "HS256", key: jwtKey })}`, "-e", "HASURA_GRAPHQL_DEV_MODE=false", "hasura/graphql-engine:v2.48.10-ce")
+  const childLinksMigration = await readFile(new URL("../nhost/migrations/default/20261011020000_child_practice_links/up.sql", import.meta.url), "utf8")
+  execFileSync("docker", ["exec", "-i", pg, "psql", "-U", "postgres", "-v", "ON_ERROR_STOP=1"], { input: [fixture, oldMigration, legacy, migration, durableXpMigration, childLinksMigration].join("\n"), stdio: ["pipe", "pipe", "pipe"] })
+  docker("run", "-d", "--rm", "--name", engine, "--network", name, "-p", "127.0.0.1::8080", "-e", `HASURA_GRAPHQL_DATABASE_URL=postgres://postgres:${password}@${pg}:5432/postgres`, "-e", `HASURA_GRAPHQL_ADMIN_SECRET=${admin}`, "-e", `HASURA_GRAPHQL_JWT_SECRET=${JSON.stringify({ type: "HS256", key: jwtKey })}`, "-e", "HASURA_GRAPHQL_DEV_MODE=false", "-e", "HASURA_GRAPHQL_UNAUTHORIZED_ROLE=public", "hasura/graphql-engine:v2.48.10-ce")
   endpoint = `http://${docker("port", engine, "8080/tcp")}`
   ready = false
   for (let attempt = 0; attempt < 60; attempt++) {
@@ -106,7 +107,59 @@ try {
   const canceled = await action("owner", "invite", { familyId, email: "parent@example.test" })
   await action("owner", "cancel_invitation", { familyId, invitationId: canceled.id })
   await assert.rejects(action("parent", "accept_invitation", { token: canceled.token }), /unavailable or expired/)
+  const linkAction = async (user, actionName, playerId = "child") => {
+    const body = await graphql(user, "mutation Link($action:String!,$payload:jsonb!){multiply_player_link_action(args:{action:$action,payload:$payload}){result}}", { action: actionName, payload: { familyId, playerId } })
+    assert.ok(!body.errors, JSON.stringify(body.errors))
+    return body.data.multiply_player_link_action[0].result
+  }
+  const practice = async (token, actionName = "load", gameSession) => {
+    const response = await fetch(`${endpoint}/v1/graphql`, { method: "POST", headers: { "content-type": "application/json", "x-hasura-role": "public" }, body: JSON.stringify({ query: "mutation Practice($action:String!,$payload:jsonb!){multiply_practice_action(args:{action:$action,payload:$payload}){result}}", variables: { action: actionName, payload: { token, gameSession } } }) })
+    const body = await response.json()
+    assert.ok(!body.errors, JSON.stringify(body.errors))
+    return body.data.multiply_practice_action[0].result
+  }
+  assert.equal((await linkAction("outsider", "create")).error.code, "42501")
+  assert.equal((await linkAction("parent", "create")).error.code, "42501", "removed parent cannot create child links")
+  const childLink = (await linkAction("owner", "create")).link
+  assert.match(childLink.token, /^[a-f0-9]{64}$/)
+  let childSnapshot = await practice(childLink.token)
+  assert.deepEqual(childSnapshot.data.players.map(p => p.id), ["child"])
+  assert.deepEqual(Object.keys(childSnapshot).sort(), ["data", "family", "userId"])
+  assert.deepEqual(Object.keys(childSnapshot.family), ["id"])
+  assert.deepEqual(Object.keys(childSnapshot.data.xp), ["child"])
+  assert.equal(childSnapshot.data.preserveMe, undefined)
+  assert.equal(JSON.stringify(childSnapshot).includes("owner@example.test"), false)
+  assert.equal((await practice("a".repeat(64))).error.code, "42501")
+  assert.equal((await practice(childLink.token, "save_player")).error.code, "22023")
+  assert.equal((await practice(childLink.token, "save_session", { ...game("wrong-child"), playerId: "owner" })).error.code, "22023")
+  assert.equal((await practice(childLink.token, "save_session", { ...game("out-of-range"), table: 6, results: [{ table: 6, multiplier: 1, correct: true }] })).error.code, "22023")
+  const balanceBefore = childSnapshot.data.xp.child
+  const childGame = game("phone-game")
+  const saved = await practice(childLink.token, "save_session", childGame)
+  assert.equal(saved.data.xp.child, balanceBefore + 1)
+  assert.deepEqual((await practice(childLink.token, "save_session", childGame)).award, saved.award)
+  assert.equal((await action("owner", "load", { familyId })).data.xp.child, saved.data.xp.child)
+  const replacement = (await linkAction("owner", "create")).link
+  assert.equal((await practice(childLink.token)).error.code, "42501", "replacement immediately disables old link")
+  assert.equal((await practice(childLink.token, "save_session", childGame)).error.code, "42501", "revoked link cannot even retry a previously saved game")
+  assert.ok(!(await practice(replacement.token)).error)
+  await linkAction("owner", "revoke")
+  assert.equal((await practice(replacement.token)).error.code, "42501")
+  assert.equal((await linkAction("owner", "list")).links.length, 0)
+  const publicSchema = await fetch(`${endpoint}/v1/graphql`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ query: '{__type(name:"mutation_root"){fields{name}}}' }) }).then(r => r.json())
+  assert.deepEqual(publicSchema.data.__type.fields.map(field => field.name), ["multiply_practice_action"])
+  const publicResults = await fetch(`${endpoint}/v1/graphql`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ query: '{multiply_practice_action_results{result}}' }) }).then(r => r.json())
+  assert.deepEqual(publicResults.data.multiply_practice_action_results, [])
+  console.log("Child practice API checks passed: anonymous token access, private snapshots, player/range isolation, parent-visible progress, XP retry idempotence, replacement, revocation, and restricted public schema.")
   console.log("Shared-family API checks passed: real JWT identity, production errors, concurrent games and XP awards, authoritative opening balances, retry idempotence, invitations, family isolation, access removal.")
+  if (process.env.MULTIPLY_BROWSER_FIXTURE) {
+    const link = (await linkAction("owner", "create")).link
+    await writeFile(process.env.MULTIPLY_BROWSER_FIXTURE, JSON.stringify({ endpoint, token: link.token, familyId, ownerSession: { accessToken: jwt("owner"), refreshToken: "local-fixture", accessTokenExpiresIn: 600, user: { id: ids.owner, email: "owner@example.test" }, decodedToken: { exp: Date.now() + 600000 } } }), { mode: 0o600 })
+    console.log("Browser fixture ready. Interrupt this process to remove disposable containers.")
+    const keepAlive = setInterval(() => {}, 1000)
+    await new Promise(resolve => { process.once("SIGINT", resolve); process.once("SIGTERM", resolve) })
+    clearInterval(keepAlive)
+  }
 } finally {
   for (const container of [engine, pg]) { try { docker("rm", "-f", container) } catch {} }
   try { docker("network", "rm", name) } catch {}

@@ -16,3 +16,4 @@
 - '!include storage_buckets.yaml'
 - '!include storage_files.yaml'
 - '!include storage_virus.yaml'
+- '!include public_multiply_practice_action_results.yaml'
