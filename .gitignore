@@ -3,7 +3,10 @@ dist/
 .next/
 out/
 .DS_Store
-AGENTS.md
 CLAUDE.md
 .nhost/
 .secrets
+
+.vercel/
+.env*
+!.env.example

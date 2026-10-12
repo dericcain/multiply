@@ -12,9 +12,12 @@
     "test:api": "node tests/run-family-api.mjs"
   },
   "dependencies": {
+    "@flags-sdk/vercel": "^1.5.1",
     "@nhost/nhost-js": "^4.9.0",
+    "@vercel/toolbar": "^0.2.7",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.4.0",
+    "flags": "^4.3.1",
     "lucide-react": "^1.51.0",
     "next": "latest",
     "radix-ui": "^1.6.7",

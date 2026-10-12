@@ -11,6 +11,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet"
 import playerModalStyles from "@/components/player-modal.module.css"
 import { loadFamily, nhost, saveFamilyPlayer, saveFamilySession, acceptFamilyInvitation } from "@/lib/nhost"
+import { useFeatureFlags } from "@/components/feature-flags"
 import { FamilySettings } from "@/components/family-settings"
 import { pendingGames, storePendingGame, removePendingGame } from "@/components/family-outbox"
 
@@ -46,12 +47,14 @@ function Shell({ player, xp = 0, pendingXp = 0, back, settings, children }) {
 function Title({ children, subtitle }) { return <><h1 className="font-[family-name:var(--font-display)] text-4xl font-black tracking-tight text-foreground">{children}</h1>{subtitle && <p className="mt-1 text-base font-semibold text-muted-foreground">{subtitle}</p>}</> }
 
 export function MultiplyApp() {
+  const { childPracticeLinks } = useFeatureFlags()
   const [childToken, setChildToken] = useState(() => new URLSearchParams(window.location.hash.slice(1)).get("play"))
   useEffect(() => {
     const changed = () => setChildToken(new URLSearchParams(window.location.hash.slice(1)).get("play"))
     window.addEventListener("hashchange", changed)
     return () => window.removeEventListener("hashchange", changed)
   }, [])
+  if (childToken && !childPracticeLinks) return <Shell><Title subtitle="Practice links are not available right now. Please try again later.">Practice is paused</Title></Shell>
   return <GameApp key={childToken || "parent"} childToken={childToken} />
 }
 

@@ -1,7 +1,10 @@
+import { childPracticeLinks } from "../lib/flags.ts"
 import assert from "node:assert/strict"
-import test from "node:test"
+import test, { beforeEach } from "node:test"
 import { POST } from "../app/api/practice/route.ts"
 import { practiceLink } from "../lib/practice-links.js"
+
+beforeEach(t => t.mock.method(childPracticeLinks.adapter, "decide", async () => true))
 
 const token = "a".repeat(64)
 const request = body => new Request("https://playmultiply.com/api/practice", { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer parent-session" }, body: JSON.stringify(body) })

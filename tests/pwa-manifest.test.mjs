@@ -1,9 +1,12 @@
+import { childPracticeLinks } from "../lib/flags.ts"
 import assert from "node:assert/strict"
 import { createHash } from "node:crypto"
-import test from "node:test"
+import test, { beforeEach } from "node:test"
 import { installationManifestUrl } from "../lib/pwa-manifest.js"
 import { GET } from "../app/api/player-manifest/route.ts"
 import baseManifest from "../lib/manifest.json" with { type: "json" }
+
+beforeEach(t => t.mock.method(childPracticeLinks.adapter, "decide", async () => true))
 
 test("parent and invitation installs keep the home launch URL", async () => {
   for (const suffix of ["/", "/?invite=parent", "/#play=invalid"]) {

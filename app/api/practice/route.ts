@@ -1,3 +1,5 @@
+import { childPracticeLinks } from "../../../lib/flags.ts"
+
 // Only the two practice operations are forwarded, with the anonymous role.
 // The database validates the bearer link and restricts every save to its player.
 export async function POST(request: Request) {
@@ -6,6 +8,9 @@ export async function POST(request: Request) {
   try { body = await request.json() } catch { return Response.json({ error: "Invalid request" }, { status: 400, headers }) }
   if (!["load", "save_session"].includes(body?.action) || typeof body?.token !== "string" || !/^[a-f0-9]{64}$/.test(body.token)) {
     return Response.json({ error: "This practice link is unavailable. Ask a parent for a new link." }, { status: 400, headers })
+  }
+  if (!await childPracticeLinks(request)) {
+    return Response.json({ error: "Practice links are not available right now.", code: "FEATURE_DISABLED" }, { status: 503, headers: { ...headers, "Retry-After": "60" } })
   }
   const subdomain = process.env.NEXT_PUBLIC_NHOST_SUBDOMAIN || "ykevmgaitwkucccphxbv"
   const region = process.env.NEXT_PUBLIC_NHOST_REGION || "us-east-1"

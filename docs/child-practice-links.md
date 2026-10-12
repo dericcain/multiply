@@ -1,5 +1,7 @@
 # Child practice links
 
+This feature is controlled by the `child-practice-links` Vercel flag. Production defaults to off; Development and Preview are on. See [feature flags](feature-flags.md) for toggling, failure behavior, and the app/backend boundary.
+
 In Settings → Kids’ practice links, create a link for each player and copy it or use the phone’s share sheet. Opening it goes straight to that child’s activities without a parent account. Games, mastery, and XP save into the same family the parents see. The child cannot switch players, edit learning settings, manage parents, or see other players’ answer histories or parent data. Their activity page and Family leaderboard show players in the same family with XP and mastery progress, highlighting their own row. Mastery percentage determines rank; XP shows effort.
 
 Links remain enabled until a parent disables or replaces them. Copy the secret link when it is created; only its hash is stored on the server. Replacing a link immediately disables the previous link, so send the replacement to the child. Anyone who has a link can practice as that child. Disabling access preserves all learning history.

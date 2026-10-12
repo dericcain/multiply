@@ -1,4 +1,8 @@
 import type { Metadata, Viewport } from "next"
+import { connection } from "next/server"
+import { VercelToolbar } from "@vercel/toolbar/next"
+import { childPracticeLinks } from "@/lib/flags"
+import { FeatureFlagsProvider } from "@/components/feature-flags"
 import "./globals.css"
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
@@ -19,6 +23,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = { themeColor: "#5c55d5", width: "device-width", initialScale: 1 }
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en" className={cn("font-sans", geist.variable)}><body>{children}<Pwa /></body></html>
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  await connection()
+  const flags = { childPracticeLinks: await childPracticeLinks() }
+  return <html lang="en" className={cn("font-sans", geist.variable)}><body><FeatureFlagsProvider flags={flags}>{children}<Pwa /></FeatureFlagsProvider>{process.env.NODE_ENV === "development" && <VercelToolbar />}</body></html>
 }

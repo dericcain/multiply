@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useFeatureFlags } from "@/components/feature-flags"
 import { Button } from "@/components/ui/button"
 import { installationManifestUrl } from "@/lib/pwa-manifest"
 
@@ -10,8 +11,10 @@ interface InstallEvent extends Event {
 }
 
 export function Pwa() {
+  const { childPracticeLinks } = useFeatureFlags()
   const [installEvent, setInstallEvent] = useState<InstallEvent | null>(null)
   const [showIosHelp, setShowIosHelp] = useState(false)
+  const [practiceInstallBlocked, setPracticeInstallBlocked] = useState(false)
   const [playerInstall, setPlayerInstall] = useState(false)
 
   useEffect(() => {
@@ -19,8 +22,9 @@ export function Pwa() {
     const updateManifest = async () => {
       const current = ++revision
       setInstallEvent(null)
+      setPracticeInstallBlocked(!childPracticeLinks && new URLSearchParams(window.location.hash.slice(1)).has("play"))
       try {
-        const href = await installationManifestUrl(window.location.href)
+        const href = childPracticeLinks ? await installationManifestUrl(window.location.href) : "/manifest.webmanifest"
         if (current !== revision) return
         const link = document.querySelector<HTMLLinkElement>('link[rel="manifest"]')
         if (link) link.href = href
@@ -35,7 +39,7 @@ export function Pwa() {
       revision++
       window.removeEventListener("hashchange", updateManifest)
     }
-  }, [])
+  }, [childPracticeLinks])
 
   useEffect(() => {
     if ("serviceWorker" in navigator && process.env.NODE_ENV === "production") {
@@ -72,7 +76,7 @@ export function Pwa() {
     setInstallEvent(null)
   }
 
-  if (!installEvent && !showIosHelp) return null
+  if (practiceInstallBlocked || (!installEvent && !showIosHelp)) return null
 
   return (
     <aside aria-label="Install Multiply!" className="mx-auto max-w-xl bg-background px-4 pb-6 text-center">
