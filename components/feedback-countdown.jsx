@@ -11,7 +11,7 @@ export function FeedbackCountdown({ onAdvance, finish = false }) {
   const [remaining, setRemaining] = useState(ANSWER_REVIEW_SECONDS)
   const [paused, setPaused] = useState(false)
   const [visible, setVisible] = useState(true)
-  const advanced = useRef(false), callback = useRef(onAdvance), button = useRef(null)
+  const advanced = useRef(false), callback = useRef(onAdvance)
   callback.current = onAdvance
   const advance = () => {
     if (advanced.current) return
@@ -19,7 +19,6 @@ export function FeedbackCountdown({ onAdvance, finish = false }) {
     callback.current()
   }
   useEffect(() => {
-    button.current?.focus({ preventScroll: true })
     const changed = () => setVisible(document.visibilityState === "visible")
     changed()
     document.addEventListener("visibilitychange", changed)
@@ -35,7 +34,7 @@ export function FeedbackCountdown({ onAdvance, finish = false }) {
     <p role="timer" aria-live="off" className="text-sm font-semibold text-muted-foreground">
       {paused ? "Countdown paused" : `${finish ? "Results" : "Next question"} in ${remaining}s`}
     </p>
-    <Button ref={button} className="relative isolate mt-2 h-12 w-full overflow-hidden rounded-2xl text-lg font-black" onClick={advance}>
+    <Button className="relative isolate mt-2 h-12 w-full overflow-hidden rounded-2xl text-lg font-black" onClick={advance}>
       <span aria-hidden="true" className={styles.fill} style={{ animationPlayState: paused || !visible ? "paused" : "running" }} />
       <span className="relative flex items-center gap-2">{finish ? "See results now" : "Next question"} <ArrowRight aria-hidden="true" /></span>
     </Button>
