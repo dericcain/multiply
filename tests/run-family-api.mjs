@@ -191,6 +191,24 @@ try {
   execFileSync("docker", ["exec", "-i", pg, "psql", "-U", "postgres", "-v", "ON_ERROR_STOP=1"], { input: childStandingsMigration, stdio: ["pipe", "pipe", "pipe"] })
   assert.deepEqual((await practice(rollbackLink.token)).standings, beforeRollback.standings)
   console.log("Child standings checks passed: family-only summaries, shared mastery ranks, saved XP updates, private histories, and reversible migration.")
+  const streakMigration = await readFile(new URL("../nhost/migrations/default/20261012000000_varied_fact_streaks/up.sql", import.meta.url), "utf8")
+  execFileSync("docker", ["exec", "-i", pg, "psql", "-U", "postgres", "-v", "ON_ERROR_STOP=1"], { input: streakMigration, stdio: ["pipe", "pipe", "pipe"] })
+  const streakLink = (await linkAction("owner", "create")).link
+  const variedGame = { ...game("streak-five"), table: 2, results: Array.from({ length: 5 }, (_, i) => ({ table: 2, multiplier: i + 1, correct: true })) }
+  const streakSaved = await practice(streakLink.token, "save_session", variedGame)
+  assert.equal(streakSaved.data.streaks.child.current, 5)
+  assert.equal(streakSaved.data.streaks.child.best, 5)
+  assert.deepEqual(Object.keys(streakSaved.data.streaks), ["child"])
+  assert.deepEqual((await practice(streakLink.token, "save_session", variedGame)).data.streaks, streakSaved.data.streaks)
+  const repeated = await practice(streakLink.token, "save_session", { ...variedGame, id: "streak-repeat" })
+  assert.deepEqual(repeated.data.streaks.child, streakSaved.data.streaks.child)
+  const broken = await practice(streakLink.token, "save_session", { ...variedGame, id: "streak-break", results: [{ table: 2, multiplier: 3, correct: false }] })
+  assert.equal(broken.data.streaks.child.current, 0)
+  assert.equal(broken.data.streaks.child.best, 5)
+  assert.deepEqual((await action("owner", "load", { familyId })).data.streaks.child, broken.data.streaks.child)
+  assert.deepEqual((await practice(streakLink.token, "save_session", variedGame)).data.streaks.child, broken.data.streaks.child, "late retry cannot grow or restore a broken streak")
+  assert.ok((await graphql("owner", '{multiply_player_streaks{player_id}}')).errors, "streak ledger stays private")
+  console.log("Streak API checks passed: varied facts, replay protection, mistakes, saved best, private child snapshots, and parent visibility.")
   if (process.env.MULTIPLY_BROWSER_FIXTURE) {
     const link = (await linkAction("owner", "create")).link
     await writeFile(process.env.MULTIPLY_BROWSER_FIXTURE, JSON.stringify({ endpoint, token: link.token, familyId, ownerSession: { accessToken: jwt("owner"), refreshToken: "local-fixture", accessTokenExpiresIn: 600, user: { id: ids.owner, email: "owner@example.test" }, decodedToken: { exp: Date.now() + 600000 } } }), { mode: 0o600 })

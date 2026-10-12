@@ -1,0 +1,16 @@
+.fill {
+  position: absolute;
+  inset: 0;
+  background: rgb(255 255 255 / 25%);
+  transform-origin: left;
+  animation: fill 5s linear forwards;
+}
+
+@keyframes fill {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fill { animation-timing-function: steps(5, end); }
+}
