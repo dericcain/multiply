@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
+import { installationManifestUrl } from "@/lib/pwa-manifest"
 
 interface InstallEvent extends Event {
   prompt(): Promise<void>
@@ -11,6 +12,30 @@ interface InstallEvent extends Event {
 export function Pwa() {
   const [installEvent, setInstallEvent] = useState<InstallEvent | null>(null)
   const [showIosHelp, setShowIosHelp] = useState(false)
+  const [playerInstall, setPlayerInstall] = useState(false)
+
+  useEffect(() => {
+    let revision = 0
+    const updateManifest = async () => {
+      const current = ++revision
+      setInstallEvent(null)
+      try {
+        const href = await installationManifestUrl(window.location.href)
+        if (current !== revision) return
+        const link = document.querySelector<HTMLLinkElement>('link[rel="manifest"]')
+        if (link) link.href = href
+        setPlayerInstall(href !== "/manifest.webmanifest")
+      } catch (error) {
+        console.error("Could not prepare home screen installation", error)
+      }
+    }
+    void updateManifest()
+    window.addEventListener("hashchange", updateManifest)
+    return () => {
+      revision++
+      window.removeEventListener("hashchange", updateManifest)
+    }
+  }, [])
 
   useEffect(() => {
     if ("serviceWorker" in navigator && process.env.NODE_ENV === "production") {
@@ -54,7 +79,7 @@ export function Pwa() {
       {installEvent ? (
         <Button variant="secondary" className="rounded-2xl" onClick={install}>Install Multiply!</Button>
       ) : (
-        <p className="text-sm text-muted-foreground">To install Multiply!, tap Share, then Add to Home Screen.</p>
+        <p className="text-sm text-muted-foreground">To install Multiply!, tap Share, then Add to Home Screen.{playerInstall && " Save from this practice link to open your player without a login."}</p>
       )}
     </aside>
   )
