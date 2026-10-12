@@ -1,3 +1,5 @@
+> Updated October 12, 2026: The current product direction supersedes the mastery-ranking rules below. Family standings now rank every player by authoritative lifetime XP, including players with no mastery. Equal XP shares competition rank (1, 1, 3). Correct answers earn 1 XP; first mastery adds the existing one-time 25 XP bonus. The XP checkpoint has been removed. Current assigned-scope mastery determines named levels: Starter (0%), Explorer (10%), Builder (25%), Expert (50%), Math Genius (100%). Levels may change with review evidence or assigned range; earned XP does not decrease. The earlier plan below is retained as historical context.
+
 # Gamification plan
 
 Status: proposed product and scoring design, 2026-10-11. No application behavior has been changed.

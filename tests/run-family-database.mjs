@@ -32,8 +32,10 @@ try {
     readFile(new URL("../nhost/migrations/default/20261011030000_child_family_standings/up.sql", import.meta.url), "utf8"),
     readFile(new URL("../nhost/migrations/default/20261012000000_varied_fact_streaks/up.sql", import.meta.url), "utf8"),
     readFile(new URL("streak-database.sql", import.meta.url), "utf8"),
+    readFile(new URL("../nhost/migrations/default/20261012010000_typed_challenge_bonus/up.sql", import.meta.url), "utf8"),
+    readFile(new URL("typed-challenge-database.sql", import.meta.url), "utf8"),
   ])
-  command("psql", ["-d", database, "-v", "ON_ERROR_STOP=1"], [fixture, files[0], legacy, files[1], files[2], files[3], files[4], files[5], files[6], files[7], files[8]].join("\n"))
+  command("psql", ["-d", database, "-v", "ON_ERROR_STOP=1"], [fixture, files[0], legacy, files[1], files[2], files[3], files[4], files[5], files[6], files[7], files[8], files[9], files[10]].join("\n"))
   console.log("Shared-family database assertions passed: migration, permissions, invitations, independent saves, retries, eviction, access removal, durable XP, mastery loss/recovery, scope changes, and award retries.")
 } finally {
   command("dropdb", [database])
