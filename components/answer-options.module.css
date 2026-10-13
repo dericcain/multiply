@@ -1,0 +1,20 @@
+.answer {
+  border-width: 2px;
+  gap: 12px;
+}
+
+.answer:disabled {
+  opacity: 1;
+}
+
+.answer[data-result="correct"] {
+  background: color-mix(in oklch, var(--success) 23%, white);
+  border-color: color-mix(in oklch, var(--success) 50%, var(--foreground));
+  color: var(--foreground);
+}
+
+.answer[data-result="incorrect"] {
+  background: color-mix(in oklch, var(--coral) 20%, white);
+  border-color: color-mix(in oklch, var(--coral) 60%, var(--foreground));
+  color: var(--foreground);
+}
