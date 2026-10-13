@@ -18,3 +18,8 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Flags control rollout, not authorization: retain all account, family membership, and player-token checks. If a backing service can be called directly, document its flag boundary and do not imply that a UI/app flag revokes backend access.
 - Verify enabled, disabled, and provider-failure behavior, including direct API requests. Document the flag key, defaults, how to toggle it, and any rollout dependencies in `docs/feature-flags.md`.
 - Remove temporary release flags and their dead branches after the feature is fully released and no longer needs a rollback switch.
+
+## Documentation
+
+- Keep durable product facts, current behavior, and decisions in `README.md`; update existing sections instead of creating feature plans or completion reports. Use Git history for superseded material.
+- Keep flag keys, rollout dependencies, and toggle instructions in `docs/feature-flags.md`. Record change-specific verification in the PR rather than a new permanent document.
