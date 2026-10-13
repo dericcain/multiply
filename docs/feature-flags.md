@@ -4,16 +4,18 @@
 
 ## Flags and boundaries
 
-All declarations in [lib/flags.ts](../lib/flags.ts) default to **false**, including missing configuration and provider failures. The table records the last documented dashboard check on **October 13, 2026**, not a fresh live-state check. Inspect the linked project before relying on these values.
+All declarations in [lib/flags.ts](../lib/flags.ts) default to **false**, including missing configuration and provider failures. The table was checked through read-only `vercel flags inspect` on **October 13, 2026 (CDT)** against the linked Multiply project. Values can change; inspect the project again before relying on them.
 
 | Key | Development | Preview | Production | Scope / dependencies |
 | --- | --- | --- | --- | --- |
-| `child-practice-links` | On | On | Off | Parent link controls, child entry, practice load/save, link-management API, and player manifests. Requires child-link/standings migrations and merged public-role metadata. |
+| `child-practice-links` | On | On | On | Parent link controls, child entry, practice load/save, link-management API, and player manifests. Requires child-link/standings migrations and merged public-role metadata. |
 | `landing-page` | On | On | On | Public homepage and its SEO/social metadata. Off restores the original app at `/`; `/play`, `/login`, and legacy entry compatibility remain available. No new backend dependency. |
 | `mastery-badges` | On | On | On | Player cards, standings, activity/results shelf, and homepage sample artwork. Off preserves numerical progress and gameplay. No badge API, migration, or writes. |
-| `practice-link-showcase` | On | On | Off | Homepage handoff demonstration. Requires both `landing-page` and `child-practice-links`; no independent API or writes. |
+| `practice-link-showcase` | On | On | On | Homepage handoff demonstration. Requires both `landing-page` and `child-practice-links`; no independent API or writes. |
 
 New user-facing features start with Production off and Development/Preview enabled for verification. Production enablement requires the user's explicit release instruction. The typed-Challenge bonus is unconditional by an explicit release decision; its temporary flag was removed.
+
+Player links are released in Production under the existing `child-practice-links` key. The owner enabled player access and explicitly requested homepage promotion; `practice-link-showcase` is now enabled in Production too. `app/page.tsx` continues to require `practice-link-showcase && child-practice-links` under the landing flag, so pausing player access also hides the showcase. Keep existing technical flag keys and API paths stable when using the user-facing name **Player links**. The app flags do not revoke direct backend access or existing bearer links.
 
 ## Implementation and authorization
 

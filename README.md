@@ -20,7 +20,7 @@ Scoring references: [progression](lib/progression.js), [streaks](lib/streaks.js)
 
 Each parent account retains its owned family when joining another. Owners create/cancel seven-day email-bound invitations and remove invited parents; both parents can edit players and save games. Acceptance requires the invited verified email. The [invitation function](functions/family-invitation.js) sends via Brevo when configured, with a copyable one-time link if email is unavailable. Nhost Auth separately handles verification/reset emails.
 
-When enabled, **Settings → Kids’ practice links** creates a revocable link for one player. Children can practice and see family XP/mastery summaries, but cannot switch players, edit assignments, manage parents, or read siblings' answer histories. Anyone holding the link can practice as that child. Only the secret's hash is stored server-side; replacing or disabling a link revokes access while preserving learning history. Copy the secret when created.
+When enabled, **Settings → Player links** creates a revocable link for one player. Children can practice and see family XP/mastery summaries, but cannot switch players, edit assignments, manage parents, or read siblings' answer histories. Anyone holding the link can practice as that child. Only the secret's hash is stored server-side; replacing or disabling a link revokes access while preserving learning history. Copy the secret when created.
 
 Child secrets stay in the URL fragment (`/play#play=…`), outside navigation URLs and referrer headers. Practice uses same-origin `/api/practice`, which forwards token-checked operations to Nhost without parent credentials. Create links on the canonical domain and allow that domain on children's devices. Loading and saving need internet; this is not offline gameplay.
 
@@ -86,5 +86,5 @@ For UI changes, check narrow mobile layouts, keyboard focus, reduced motion, ena
 
 - **October 12, 2026:** Lifetime XP became the family ranking metric, superseding the earlier mastery-ranking plan. Mastery determines levels; streaks recognize varied practice without extra XP.
 - **October 12, 2026:** The typed-Challenge bonus was explicitly released unconditionally; its temporary flag was removed. No retroactive bonus is awarded to old sessions.
-- **October 13, 2026:** Homepage refinements favor fewer repeated demonstrations and readable static previews. Marketing for child links follows actual feature availability.
+- **October 13, 2026:** Homepage refinements favor fewer repeated demonstrations and readable static previews. Marketing for player links follows actual feature availability.
 - **October 13, 2026:** Consolidate durable facts here, keep flag operations in one required runbook, and use Git history for superseded plans, image studies, and verification narratives. Update existing sections instead of appending a work diary. For old material, use `git log --all -- docs/` and `git show <commit>:docs/<file>`.

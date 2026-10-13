@@ -21,7 +21,7 @@ export function PracticeLinkShowcase() {
               <div className={styles.phoneContent}>
                 <div className={styles.brand}>Multiply<span>!</span></div>
                 <p className={styles.breadcrumb}><Settings2 size={16} /> Settings</p>
-                <p className={styles.screenTitle}>Kids’ practice links</p>
+                <p className={styles.screenTitle}>Player links</p>
                 <div className={styles.learning}><b>Maya</b><span>Practice link enabled</span></div>
                 <div className={styles.linkPreview}><Link2 size={16} /><span>Maya’s practice link</span><Check size={16} /></div>
                 <p className={styles.share}><Link2 size={16} /> Copy or share link</p>

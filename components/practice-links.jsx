@@ -33,7 +33,7 @@ export function PracticeLinks({ familyId, players }) {
     finally { setBusy(false) }
   }
   return <Card><CardContent className="grid gap-4 p-5">
-    <h2 className="text-xl font-black">Kids’ practice links</h2>
+    <h2 className="text-xl font-black">Player links</h2>
     <p className="text-sm text-muted-foreground">Send each child a link to play on their phone without a parent login. Their progress saves here. Wi-Fi or mobile data is needed.</p>
     <p className="text-sm text-muted-foreground">Anyone with a link can practice as that child. It opens only their player and has no parent settings. Allow this website’s domain on their phone.</p>
     {links && players.map(player => {
