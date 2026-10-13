@@ -13,7 +13,7 @@ export const childPracticeLinks = flag<boolean>({
 
 export const practiceLinkShowcase = flag<boolean>({
   key: "practice-link-showcase",
-  description: "Show the full-width two-phone practice link demonstration on the public home page.",
+  description: "Show the responsive parent-to-child practice link demonstration on the public home page.",
   defaultValue: false,
   adapter: vercelAdapter,
   options: [{ value: false, label: "Off" }, { value: true, label: "On" }],

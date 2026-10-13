@@ -15,7 +15,7 @@ export function PlayerCards() {
 }
 
 export function ActivityCards({ detailed = false }: { detailed?: boolean }) {
-  return <div className={styles.activityCards}><div className={styles.practice}><Sparkles aria-hidden="true" /><b>Practice</b><small>{detailed ? "Keep going or use a timer" : "Build your confidence"}</small>{detailed && <span>No round score. Just practice.</span>}</div><div className={styles.challenge}><Trophy aria-hidden="true" /><b>Challenge</b><small>{detailed ? "A fixed set of questions" : "See what you know"}</small>{detailed && <span>Finish with a score and XP.</span>}</div></div>
+  return <div className={styles.activityCards}><div className={styles.practice}><Sparkles aria-hidden="true" /><b>Practice</b><small>{detailed ? "Keep going or use a timer" : "Keep going or use a timer"}</small>{detailed && <span>No round score. Just practice.</span>}</div><div className={styles.challenge}><Trophy aria-hidden="true" /><b>Challenge</b><small>{detailed ? "A fixed set of questions" : "A fixed round with a score"}</small>{detailed && <span>Finish with a score and XP.</span>}</div></div>
 }
 
 export function DurationPreview() {

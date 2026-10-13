@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
-import { landingPage, practiceLinkShowcase } from "@/lib/flags"
+import { evaluate } from "flags/next"
+import { landingPage, practiceLinkShowcase, childPracticeLinks } from "@/lib/flags"
 import { LandingEntry } from "@/components/landing/landing-entry"
 import { LandingPage } from "@/components/landing/landing-page"
 
@@ -17,5 +18,6 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function Page() {
   const enabled = await landingPage()
-  return <LandingEntry enabled={enabled}>{enabled && <LandingPage showPracticeLinks={await practiceLinkShowcase()} />}</LandingEntry>
+  const [showcase, childLinks] = enabled ? await evaluate([practiceLinkShowcase, childPracticeLinks]) : [false, false]
+  return <LandingEntry enabled={enabled}>{enabled && <LandingPage showPracticeLinks={showcase && childLinks} />}</LandingEntry>
 }
