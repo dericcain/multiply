@@ -1,0 +1,23 @@
+.badge { display: block; flex-shrink: 0; object-fit: contain; }
+.journey { margin: -1rem -1rem 1rem; border-radius: 1rem 1rem 0 0; background: radial-gradient(ellipse at 12% 30%, #fff 0, transparent 62%), linear-gradient(115deg, #eee9fc, #f9f6ff); border-bottom: 1px solid var(--border); }
+.genius { background: radial-gradient(ellipse at 12% 30%, #fff5d1 0, transparent 65%), linear-gradient(115deg, #f5e9ba, #eee8ff); }
+.hero { display: flex; align-items: center; gap: 1rem; padding: 1rem; }
+.spotlight { flex-shrink: 0; display: grid; place-items: center; width: 104px; height: 108px; }
+.spotlight img { filter: drop-shadow(0 5px 5px #39316b18); }
+.copy { min-width: 0; }
+.eyebrow { font-size: 10px; letter-spacing: .09em; font-weight: 800; color: #625891; }
+.name { font-size: clamp(1.5rem, 5vw, 2rem); line-height: 1.15; font-weight: 900; letter-spacing: -.04em; margin-top: 5px; color: #39316b; overflow-wrap: anywhere; }
+.goal { font-size: 13px; line-height: 1.5; margin-top: 7px; color: #625891; font-weight: 600; }
+.collection { margin: 0 1rem; }
+.collection summary { cursor: pointer; min-height: 44px; padding: 12px 0; font-size: 13px; font-weight: 800; color: #5143a6; }
+.collection summary:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; border-radius: 6px; }
+.summaryHint { float: right; margin-top: 2px; font-size: 11px; color: #706888; font-weight: 600; }
+.shelf { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; padding: 4px 0 12px; }
+.tile { display: flex; flex-direction: column; align-items: center; padding: 8px 2px; border: 1px solid transparent; border-radius: 14px; min-width: 0; }
+.tile img { width: 100%; max-width: 64px; height: auto; }
+.current { background: #fff; border-color: #d3c9ee; box-shadow: 0 3px 12px #39316b08; }
+.locked { filter: grayscale(1); opacity: .4; }
+.tileName { min-height: 32px; display: grid; place-items: center; text-align: center; font-size: 11px; font-weight: 800; line-height: 1.2; color: #39316b; overflow-wrap: anywhere; }
+.status { display: flex; align-items: center; justify-content: center; gap: 2px; font-size: 10px; line-height: 1.4; color: #706888; }
+.explanation { font-size: 11px; line-height: 1.5; color: #706888; padding-bottom: 16px; }
+@media(max-width:360px) { .hero { gap: 8px; padding: 12px; } .spotlight { width: 80px; height: 88px; } .spotlight img { width: 80px; height: 80px; } .shelf { gap: 2px; } .tileName { font-size: 10px; } .summaryHint { font-size: 10px; } }

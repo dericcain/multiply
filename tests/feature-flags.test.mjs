@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { childPracticeLinks, practiceLinkShowcase, landingPage } from "../lib/flags.ts"
+import { childPracticeLinks, practiceLinkShowcase, landingPage, masteryBadges } from "../lib/flags.ts"
 import { POST as practice } from "../app/api/practice/route.ts"
 import { POST as manageLinks } from "../app/api/practice-links/route.ts"
 import { GET as playerManifest } from "../app/api/player-manifest/route.ts"
@@ -92,4 +92,18 @@ test("landing page stays disabled when its provider fails", async t => {
   t.mock.method(console, "warn", () => {})
   assert.equal(landingPage.defaultValue, false)
   assert.equal(await landingPage(new Request("https://playmultiply.com")), false)
+})
+
+for (const enabled of [true, false]) {
+  test(`mastery badges honor the provider decision: ${enabled}`, async t => {
+    t.mock.method(masteryBadges.adapter, "decide", async () => enabled)
+    assert.equal(await masteryBadges(new Request("https://playmultiply.com/play")), enabled)
+  })
+}
+
+test("mastery badges stay disabled when their provider fails", async t => {
+  t.mock.method(masteryBadges.adapter, "decide", async () => { throw new Error("Provider unavailable") })
+  t.mock.method(console, "warn", () => {})
+  assert.equal(masteryBadges.defaultValue, false)
+  assert.equal(await masteryBadges(new Request("https://playmultiply.com/play")), false)
 })

@@ -26,3 +26,11 @@ export const landingPage = flag<boolean>({
   adapter: vercelAdapter,
   options: [{ value: false, label: "Off" }, { value: true, label: "On" }],
 })
+
+export const masteryBadges = flag<boolean>({
+  key: "mastery-badges",
+  description: "Show player mastery badges and their badge collection from saved learning progress.",
+  defaultValue: false,
+  adapter: vercelAdapter,
+  options: [{ value: false, label: "Off" }, { value: true, label: "On" }],
+})

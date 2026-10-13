@@ -4,12 +4,15 @@ import { useEffect, useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { familyStandings, rankStandings } from "@/lib/progression"
+import { useFeatureFlags } from "@/components/feature-flags"
+import { BadgeJourney, MasteryBadge } from "@/components/mastery-badge"
 import styles from "./progression.module.css"
 
 export function Journey({ progress, nextStat }) {
+  const { masteryBadges } = useFeatureFlags()
   const total = progress.total ?? 0, count = progress.count
   const percentage = total ? count / total * 100 : 0
-  return <Card className="mt-4 border-primary/20 bg-primary/5"><CardContent className="p-4"><div className="flex flex-wrap items-center justify-between gap-2"><h2 className="font-black">Level {progress.level.number} · {progress.level.name}</h2><b>{progress.hasEvidence ? `${Math.round(percentage)}% mastered` : "Getting started"}</b></div><Progress className="mt-3 h-3" value={percentage} aria-label={`${count} of ${total} assigned facts mastered`} /><p className="mt-2 text-sm font-semibold">{total ? `${count} / ${total} assigned facts mastered` : "Ask a parent to assign your tables."}</p><p className="mt-1 text-sm">{count === total && total ? "Finish line reached! Review your tables, or ask a parent for your next goal." : `Next goal: ${progress.nextTarget ? `master ${progress.nextTarget.label}` : "master one more fact"}.`}</p>{nextStat && <p className="mt-2 text-sm">Next fact: {Math.min(nextStat.recent?.length ?? 0, 5)}/5 responses recorded · {nextStat.recent?.length ? Math.round(nextStat.recent.filter(Boolean).length / nextStat.recent.length * 100) : 0}% correct in recent responses. Mastery needs at least 80%.</p>}</CardContent></Card>
+  return <Card className="mt-4 border-primary/20 bg-primary/5"><CardContent className="p-4"><BadgeJourney progress={progress} /><div className="flex flex-wrap items-center justify-between gap-2"><h2 className="font-black">{masteryBadges ? "Your assigned tables" : `Level ${progress.level.number} · ${progress.level.name}`}</h2><b>{progress.hasEvidence ? `${Math.round(percentage)}% mastered` : "Getting started"}</b></div><Progress className="mt-3 h-3" value={percentage} aria-label={`${count} of ${total} assigned facts mastered`} /><p className="mt-2 text-sm font-semibold">{total ? `${count} / ${total} assigned facts mastered` : "Ask a parent to assign your tables."}</p><p className="mt-1 text-sm">{count === total && total ? "Finish line reached! Review your tables, or ask a parent for your next goal." : `Next goal: ${progress.nextTarget ? `master ${progress.nextTarget.label}` : "master one more fact"}.`}</p>{nextStat && <p className="mt-2 text-sm">Next fact: {Math.min(nextStat.recent?.length ?? 0, 5)}/5 responses recorded · {nextStat.recent?.length ? Math.round(nextStat.recent.filter(Boolean).length / nextStat.recent.length * 100) : 0}% correct in recent responses. Mastery needs at least 80%.</p>}</CardContent></Card>
 }
 
 export function FamilyStandings({ data, standings, activePlayer }) {
@@ -24,6 +27,7 @@ export function FamilyStandings({ data, standings, activePlayer }) {
       return <li key={row.player.id} className={`rounded-xl border p-3 ${row.player.id === activePlayer ? "border-primary bg-primary/10" : "bg-muted/50"}`}>
         <div className="flex items-center gap-2">
           <b className="min-w-8 text-primary">#{row.rank}</b>
+          <MasteryBadge level={row.level} size={48} />
           <div className="min-w-0 flex-1">
             <b className="block break-words">{row.player.name}{row.player.id === activePlayer ? " (you)" : ""}</b>
             <span className="text-xs font-semibold">Level {row.level.number} · {row.level.name}</span>
