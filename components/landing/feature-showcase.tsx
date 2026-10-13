@@ -31,7 +31,7 @@ export function FeatureShowcase() {
           <small>Accuracy over multiple responses builds mastery.</small>
         </div>
         <p className={styles.visualNote}>+1 XP per correct answer · +25 XP when a fact is first mastered.</p>
-        <div className={styles.growthStreak}><StreakBadge streak={{ current: 5, best: 8 }} /><p className={styles.visualNote}>Build streaks with different multiplication facts.</p></div>
+        <div className={styles.growthStreak}><StreakBadge streak={{ current: 5, best: 8 }} /></div>
       </FeatureCard>
       <FeatureCard title="Know what to practice next." className={styles.lavender}>
         <div className={styles.review}><p>Nice work!</p><b>8 <span>of 10 correct</span></b><div><strong>Try these again next round</strong><span>6 × 7 = 42</span><span>8 × 9 = 72</span></div></div>

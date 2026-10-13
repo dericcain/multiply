@@ -61,7 +61,6 @@
 .timerPreview .duration .staticSlider, .timerPreview .duration > p { display: none; }
 .badgeSpotlight { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; font-weight: 850; font-size: 15px; }
 .growthStreak { margin-top: 18px; }
-.growthStreak .visualNote { margin-top: 10px; }
 .assignment + .assignment { margin-top: 8px; }
 .demoPlayer > span:last-child { font-size: 12px; }
 @media (max-width: 760px) { .steps .activityCards small { font-size: 12px; } }
