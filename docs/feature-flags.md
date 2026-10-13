@@ -4,11 +4,13 @@ Use **Vercel Flags** for Multiply. The project is already hosted on Vercel and i
 
 A centralized environment-variable boolean is the smallest alternative and costs no flag-service requests, but every toggle needs a redeploy. A custom database table allows runtime toggles but requires permissions, caching, management UI, and failure handling. Supabase can host such a table, and its [feature-flag middleware](https://supabase.com/docs/reference/middleware/middleware-withfeatureflag) accepts your own `check` callback. Multiply uses Nhost, so adding Supabase solely for flags would introduce another backend. Vercel gives us runtime toggles, environment separation, and a dashboard in the service we already use.
 
-## Current flag
+## Current flags
 
 | Key | Development | Preview | Production | Failure fallback |
 | --- | --- | --- | --- | --- |
 | `child-practice-links` | On | On | Off | Off |
+| `landing-page` | On | On | Off | Off |
+| `practice-link-showcase` | On | On | Off | Off |
 
 [Manage child practice links in Vercel](https://vercel.com/deric-cains-projects-8a553f23/multiply/flag/child-practice-links).
 
@@ -62,3 +64,15 @@ Local browser checks verified the real Development flag enables parent link crea
 The typed challenge XP bonus is unconditional at the user's request. Its temporary `typed-challenge-bonus` flag has been removed from code and Vercel. Completing a typed challenge with at least 80% correct earns 5 bonus XP; partial rounds, multiple choice, and practice do not. The database computes eligibility and retains the award in the session receipt so retries cannot pay twice. `20261012010000_typed_challenge_bonus` was applied to the linked production Nhost project on October 12, 2026 and recorded as clean; historical sessions receive no retroactive award. Parent and child authorization and challenge validation remain in place. Database coverage is in `tests/typed-challenge-database.sql`.
 
 Production verification confirmed the unconditional 5 XP bonus and idempotent receipt retry in a transaction that rolled back all test data. Hasura metadata is consistent. The prior function and migration catalog are backed up locally in `/Users/dericcain/.codex/backups/multiply/2026-10-12-typed-challenge-bonus`.
+
+## Public landing page
+
+`landing-page` controls the new public homepage at `/` and its landing-specific SEO/social metadata. Development and Preview are On; Production and provider-failure fallback are Off. It is evaluated on the server at request time. The root layout passes the resolved booleans through `FeatureFlagsProvider`; the server page renders the marketing composition only when enabled. When disabled, ordinary root visitors get the existing application. `/play`, `/login`, legacy entry compatibility, and canonical link generation remain available regardless of the landing rollout: these preserve existing app behavior and are not new backend features.
+
+[Manage the landing page in Vercel](https://vercel.com/deric-cains-projects-8a553f23/multiply/flag/landing-page). Toggle with `vercel flags enable landing-page --environment preview --non-interactive` (or `disable`). Production enablement requires an explicit release instruction. All demonstrations are local sample interfaces, with no player sessions, persistence, auth, or game-service requests. The page introduces no app API routes. Static preview assets do not expose family data.
+
+`practice-link-showcase` independently controls the approved two-phone section inside the enabled landing page. It has the same On Development/Preview, Off Production, and Off failure defaults. [Manage the showcase in Vercel](https://vercel.com/deric-cains-projects-8a553f23/multiply/flag/practice-link-showcase). Toggle with `vercel flags enable practice-link-showcase --environment preview --non-interactive` (or `disable`). It illustrates the existing child-link capability and does not evaluate or alter the child feature’s flag, permissions, or backing service.
+
+For release, enable `landing-page` and `practice-link-showcase` in Production only after approval and deployment. Check that the independently managed `child-practice-links` feature and its backend migrations are available in the deployed game. The linked Production child flag was still Off when inspected during this work; a prior live deployment may predate that integration. Deploying the current code honors the child flag and must preserve the intended availability of the live capability. No Production flags were changed here.
+
+The [landing page implementation and verification notes](landing-page.md) cover route migration, installed shortcuts, sample data, and browser evidence. `npm test` covers all three flags’ enabled/disabled decisions and provider failures, legacy URL routing, canonical links, and manifests. Existing API tests retain enabled/disabled/provider-failure coverage for direct child requests.

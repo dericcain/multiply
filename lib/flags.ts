@@ -10,3 +10,19 @@ export const childPracticeLinks = flag<boolean>({
   adapter: vercelAdapter,
   options: [{ value: false, label: "Off" }, { value: true, label: "On" }],
 })
+
+export const practiceLinkShowcase = flag<boolean>({
+  key: "practice-link-showcase",
+  description: "Show the full-width two-phone practice link demonstration on the public home page.",
+  defaultValue: false,
+  adapter: vercelAdapter,
+  options: [{ value: false, label: "Off" }, { value: true, label: "On" }],
+})
+
+export const landingPage = flag<boolean>({
+  key: "landing-page",
+  description: "Show the public Multiply landing page with sample gameplay and product previews.",
+  defaultValue: false,
+  adapter: vercelAdapter,
+  options: [{ value: false, label: "Off" }, { value: true, label: "On" }],
+})

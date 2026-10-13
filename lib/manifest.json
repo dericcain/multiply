@@ -4,7 +4,7 @@
   "short_name": "Multiply!",
   "description": "A friendly multiplication practice game for the whole family.",
   "lang": "en",
-  "start_url": "/",
+  "start_url": "/play",
   "scope": "/",
   "display": "standalone",
   "background_color": "#f6f5ff",

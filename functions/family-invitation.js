@@ -79,7 +79,7 @@ export default async function familyInvitation(req, res) {
     return reply(res, 502, { error: "We couldn’t create the invitation. Please try again." })
   }
 
-  const inviteUrl = `https://playmultiply.com/?invite=${encodeURIComponent(invitation.token)}`
+  const inviteUrl = `https://playmultiply.com/play?invite=${encodeURIComponent(invitation.token)}`
   if (!process.env.BREVO_API_KEY) {
     return reply(res, 200, { invitation, emailSent: false, emailError: "Email isn’t configured yet. Copy and share the invitation link." })
   }

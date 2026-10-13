@@ -12,7 +12,7 @@ const request = body => new Request("https://playmultiply.com/api/practice", { m
 test("practice links use the current domain and keep secrets in the fragment", () => {
   const link = new URL(practiceLink("https://playmultiply.com/settings?invite=parent", token))
   assert.equal(link.origin, "https://playmultiply.com")
-  assert.equal(link.pathname, "/")
+  assert.equal(link.pathname, "/play")
   assert.equal(link.search, "")
   assert.equal(new URLSearchParams(link.hash.slice(1)).get("play"), token)
 })

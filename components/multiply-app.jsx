@@ -234,7 +234,7 @@ function GameApp({ childToken }) {
 }
 
 function AuthScreen({ onAuthenticated, invited }) {
-  const [mode, setMode] = useState("signin")
+  const [mode, setMode] = useState(() => new URLSearchParams(window.location.search).get("signup") === "1" ? "signup" : "signin")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
@@ -252,6 +252,7 @@ function AuthScreen({ onAuthenticated, invited }) {
       if (!current) {
         setError(mode === "signup" ? "Check your email to verify your account, then sign in." : "We couldn’t sign you in. Please try again.")
       } else {
+        if (window.location.pathname === "/login") { window.location.replace(`/play${window.location.search}${window.location.hash}`); return }
         onAuthenticated(current)
       }
     } catch (authError) {
@@ -260,7 +261,7 @@ function AuthScreen({ onAuthenticated, invited }) {
       setBusy(false)
     }
   }
-  return <Shell><div className="mx-auto max-w-md py-12"><Title subtitle={invited ? "Sign in with the email the invitation was sent to, then accept it." : "For parents: save your family’s progress."}>{mode === "signin" ? "Welcome back" : "Create your account"}</Title><form className="mt-8 grid gap-4" onSubmit={submit}><div className="grid gap-2"><Label htmlFor="auth-email" className="font-bold">Email</Label><Input id="auth-email" type="email" required autoComplete="email" className="h-12 rounded-xl px-4" value={email} onChange={event => setEmail(event.target.value)} /></div><div className="grid gap-2"><Label htmlFor="auth-password" className="font-bold">Password</Label><Input id="auth-password" type="password" required minLength={9} autoComplete={mode === "signin" ? "current-password" : "new-password"} className="h-12 rounded-xl px-4" value={password} onChange={event => setPassword(event.target.value)} /></div>{mode === "signup" && <p className="text-sm text-muted-foreground">Use at least 9 characters for your password.</p>}{error && <p role="alert" className="rounded-xl bg-[var(--coral)]/10 p-3 text-sm font-semibold text-[var(--coral)]">{error}</p>}<Primary type="submit" disabled={busy}>{busy ? "Working…" : mode === "signin" ? "Sign in" : "Create account"}</Primary></form><Button variant="ghost" className="mt-4 w-full" onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setError("") }}>{mode === "signin" ? "Create an account" : "Sign in"}</Button></div></Shell>
+  return <Shell><a href="/" className="inline-block rounded-xl px-3 py-2 text-sm font-bold text-primary hover:bg-secondary">← Home</a><div className="mx-auto max-w-md py-12"><Title subtitle={invited ? "Sign in with the email the invitation was sent to, then accept it." : "For parents: save your family’s progress."}>{mode === "signin" ? "Welcome back" : "Create your account"}</Title><form className="mt-8 grid gap-4" onSubmit={submit}><div className="grid gap-2"><Label htmlFor="auth-email" className="font-bold">Email</Label><Input id="auth-email" type="email" required autoComplete="email" className="h-12 rounded-xl px-4" value={email} onChange={event => setEmail(event.target.value)} /></div><div className="grid gap-2"><Label htmlFor="auth-password" className="font-bold">Password</Label><Input id="auth-password" type="password" required minLength={9} autoComplete={mode === "signin" ? "current-password" : "new-password"} className="h-12 rounded-xl px-4" value={password} onChange={event => setPassword(event.target.value)} /></div>{mode === "signup" && <p className="text-sm text-muted-foreground">Use at least 9 characters for your password.</p>}{error && <p role="alert" className="rounded-xl bg-[var(--coral)]/10 p-3 text-sm font-semibold text-[var(--coral)]">{error}</p>}<Primary type="submit" disabled={busy}>{busy ? "Working…" : mode === "signin" ? "Sign in" : "Create account"}</Primary></form><Button variant="ghost" className="mt-4 w-full" onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setError("") }}>{mode === "signin" ? "Create an account" : "Sign in"}</Button></div></Shell>
 }
 
 function Primary(props) { return <Button {...props} className={`mt-7 h-14 w-full rounded-2xl text-lg font-black shadow-lg shadow-primary/20 ${props.className || ""}`} /> }

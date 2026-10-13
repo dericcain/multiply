@@ -8,11 +8,11 @@ import baseManifest from "../lib/manifest.json" with { type: "json" }
 
 beforeEach(t => t.mock.method(childPracticeLinks.adapter, "decide", async () => true))
 
-test("parent and invitation installs keep the home launch URL", async () => {
-  for (const suffix of ["/", "/?invite=parent", "/#play=invalid"]) {
+test("parent and invitation installs launch the game with the original installation identity", async () => {
+  for (const suffix of ["/", "/play", "/?invite=parent", "/play?invite=parent", "/#play=invalid"]) {
     assert.equal(await installationManifestUrl(`https://playmultiply.com${suffix}`), "/manifest.webmanifest")
   }
-  assert.equal(baseManifest.start_url, "/")
+  assert.equal(baseManifest.start_url, "/play")
   assert.equal(baseManifest.id, "/")
 })
 
@@ -22,6 +22,7 @@ test("player installs have separate identities without exposing their secrets", 
   const manifestUrl = await installationManifestUrl(href)
   assert.equal(manifestUrl, `/api/player-manifest?player=${createHash("sha256").update(token).digest("hex")}`)
   assert.equal(await installationManifestUrl(href), manifestUrl)
+  assert.equal(await installationManifestUrl(href.replace("/#", "/play#")), manifestUrl, "legacy and canonical links keep the same player installation identity")
   assert.notEqual(await installationManifestUrl(`https://playmultiply.com/#play=${"b".repeat(64)}`), manifestUrl)
   assert.ok(!manifestUrl.includes(token))
   const response = await GET(new Request(new URL(manifestUrl, href)))
@@ -34,7 +35,7 @@ test("player installs have separate identities without exposing their secrets", 
   assert.equal(Object.hasOwn(manifest, "start_url"), false)
   assert.equal(manifest.scope, "/")
   assert.deepEqual(manifest.icons, baseManifest.icons)
-  assert.equal(baseManifest.start_url, "/", "player response must not mutate the parent manifest")
+  assert.equal(baseManifest.start_url, "/play", "player response must not mutate the parent manifest")
 })
 
 test("manifest endpoint rejects invalid player identities", async () => {

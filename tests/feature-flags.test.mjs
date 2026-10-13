@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { childPracticeLinks } from "../lib/flags.ts"
+import { childPracticeLinks, practiceLinkShowcase, landingPage } from "../lib/flags.ts"
 import { POST as practice } from "../app/api/practice/route.ts"
 import { POST as manageLinks } from "../app/api/practice-links/route.ts"
 import { GET as playerManifest } from "../app/api/player-manifest/route.ts"
@@ -64,4 +64,32 @@ test("enabled link management retains membership errors from Hasura", async t =>
   const response = await manageLinks(linksRequest())
   assert.equal(response.status, 403)
   assert.equal((await response.json()).error, "Family access denied")
+})
+
+for (const enabled of [true, false]) {
+  test(`showcase honors the provider decision: ${enabled}`, async t => {
+    t.mock.method(practiceLinkShowcase.adapter, "decide", async () => enabled)
+    assert.equal(await practiceLinkShowcase(new Request("https://playmultiply.com")), enabled)
+  })
+}
+
+test("showcase stays disabled when its provider fails", async t => {
+  t.mock.method(practiceLinkShowcase.adapter, "decide", async () => { throw new Error("Provider unavailable") })
+  t.mock.method(console, "warn", () => {})
+  assert.equal(practiceLinkShowcase.defaultValue, false)
+  assert.equal(await practiceLinkShowcase(new Request("https://playmultiply.com")), false)
+})
+
+for (const enabled of [true, false]) {
+  test(`landing page honors the provider decision: ${enabled}`, async t => {
+    t.mock.method(landingPage.adapter, "decide", async () => enabled)
+    assert.equal(await landingPage(new Request("https://playmultiply.com")), enabled)
+  })
+}
+
+test("landing page stays disabled when its provider fails", async t => {
+  t.mock.method(landingPage.adapter, "decide", async () => { throw new Error("Provider unavailable") })
+  t.mock.method(console, "warn", () => {})
+  assert.equal(landingPage.defaultValue, false)
+  assert.equal(await landingPage(new Request("https://playmultiply.com")), false)
 })

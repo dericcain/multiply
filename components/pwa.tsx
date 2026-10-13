@@ -1,5 +1,6 @@
 "use client"
 
+import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
 import { useFeatureFlags } from "@/components/feature-flags"
 import { Button } from "@/components/ui/button"
@@ -12,6 +13,7 @@ interface InstallEvent extends Event {
 
 export function Pwa() {
   const { childPracticeLinks } = useFeatureFlags()
+  const pathname = usePathname()
   const [installEvent, setInstallEvent] = useState<InstallEvent | null>(null)
   const [showIosHelp, setShowIosHelp] = useState(false)
   const [practiceInstallBlocked, setPracticeInstallBlocked] = useState(false)
@@ -19,6 +21,18 @@ export function Pwa() {
 
   useEffect(() => {
     let revision = 0
+    let manifestHref: string | null = null
+    // Metadata can stream additional manifest tags after the first effect.
+    // Keep every tag consistent so browsers always install the current player.
+    const syncManifestTags = () => {
+      const href = manifestHref
+      if (!href) return
+      document.querySelectorAll<HTMLLinkElement>('link[rel="manifest"]').forEach(link => {
+        if (link.getAttribute("href") !== href) link.setAttribute("href", href)
+      })
+    }
+    const observer = new MutationObserver(syncManifestTags)
+    observer.observe(document.documentElement, { childList: true, subtree: true })
     const updateManifest = async () => {
       const current = ++revision
       setInstallEvent(null)
@@ -26,8 +40,8 @@ export function Pwa() {
       try {
         const href = childPracticeLinks ? await installationManifestUrl(window.location.href) : "/manifest.webmanifest"
         if (current !== revision) return
-        const link = document.querySelector<HTMLLinkElement>('link[rel="manifest"]')
-        if (link) link.href = href
+        manifestHref = href
+        syncManifestTags()
         setPlayerInstall(href !== "/manifest.webmanifest")
       } catch (error) {
         console.error("Could not prepare home screen installation", error)
@@ -37,9 +51,10 @@ export function Pwa() {
     window.addEventListener("hashchange", updateManifest)
     return () => {
       revision++
+      observer.disconnect()
       window.removeEventListener("hashchange", updateManifest)
     }
-  }, [childPracticeLinks])
+  }, [childPracticeLinks, pathname])
 
   useEffect(() => {
     if ("serviceWorker" in navigator && process.env.NODE_ENV === "production") {
@@ -76,7 +91,7 @@ export function Pwa() {
     setInstallEvent(null)
   }
 
-  if (practiceInstallBlocked || (!installEvent && !showIosHelp)) return null
+  if (pathname === "/" || pathname === "/login" || practiceInstallBlocked || (!installEvent && !showIosHelp)) return null
 
   return (
     <aside aria-label="Install Multiply!" className="mx-auto max-w-xl bg-background px-4 pb-6 text-center">
