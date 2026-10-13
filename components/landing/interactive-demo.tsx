@@ -53,7 +53,7 @@ export function InteractiveDemo() {
   }
   return <div className={styles.demo} aria-label="Try a sample Multiply practice game">
     <div className={styles.demoTop}><span className={styles.demoPill}><Sparkles size={15} /> Try it out</span><span className={styles.demoXp} aria-label={`Sample XP: ${xp}`}>{xp} <small>XP</small></span></div>
-    <div className={styles.demoPlayer}><span className={styles.avatar}>E</span><div><b>Ethan</b><small>Level 3 · Builder</small></div><span>Sample player</span></div>
+    <div className={styles.demoPlayer}><span className={styles.avatar}>M</span><div><b>Maya</b><small>Level 3 · Builder</small></div><span>Sample player</span></div>
     <div className={styles.demoMode}><b>Practice</b><span>+1 XP per correct answer</span></div>
     <p className={styles.equation} aria-live="polite" aria-atomic="true">{question.table} <span>×</span> {question.multiplier} <small>= ?</small></p>
     <div className={styles.answers}>{question.choices.map((value, position) => <button type="button" key={position} ref={position === 0 ? firstAnswer : undefined} aria-disabled={selected !== null} tabIndex={selected === null ? 0 : -1} onClick={() => answer(value)} className={selected !== null && value === correctAnswer ? styles.correct : selected === value ? styles.incorrect : ""} aria-label={`Answer ${value}${selected !== null && value === correctAnswer ? ", correct answer" : selected === value ? ", incorrect answer" : ""}`}>{value}{selected !== null && value === correctAnswer ? <Check aria-hidden="true" size={20} /> : selected === value ? <X aria-hidden="true" size={20} /> : null}</button>)}</div>

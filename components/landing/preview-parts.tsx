@@ -3,9 +3,9 @@ import { Progress } from "@/components/ui/progress"
 import styles from "./landing.module.css"
 
 export const samplePlayers = [
-  { id: "ethan", name: "Ethan", xp: 1250, count: 45, total: 100, maxTable: 10, maxMultiplier: 10, color: "var(--coral)" },
-  { id: "josiah", name: "Josiah", xp: 850, count: 30, total: 60, maxTable: 6, maxMultiplier: 10, color: "var(--sky)" },
-  { id: "joseph", name: "Joseph", xp: 425, count: 10, total: 40, maxTable: 4, maxMultiplier: 10, color: "var(--success)" },
+  { id: "maya", name: "Maya", xp: 1250, count: 45, total: 100, maxTable: 10, maxMultiplier: 10, color: "var(--coral)" },
+  { id: "jordan", name: "Jordan", xp: 850, count: 30, total: 60, maxTable: 6, maxMultiplier: 10, color: "var(--sky)" },
+  { id: "mateo", name: "Mateo", xp: 425, count: 10, total: 40, maxTable: 4, maxMultiplier: 10, color: "var(--success)" },
 ]
 
 export const sampleStandings = samplePlayers.map(({ color, xp, count, total, ...player }) => ({ player, xp, count, total, hasEvidence: true }))
