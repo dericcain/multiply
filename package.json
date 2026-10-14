@@ -14,6 +14,7 @@
   "dependencies": {
     "@flags-sdk/vercel": "^1.5.1",
     "@nhost/nhost-js": "^4.9.0",
+    "@vercel/analytics": "^2.0.1",
     "@vercel/toolbar": "^0.2.7",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.4.0",

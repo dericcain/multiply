@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next"
 import { connection } from "next/server"
 import { VercelToolbar } from "@vercel/toolbar/next"
+import { Analytics } from "@vercel/analytics/next"
 import { evaluate } from "flags/next"
 import { childPracticeLinks, practiceLinkShowcase, landingPage, masteryBadges } from "@/lib/flags"
 import { FeatureFlagsProvider } from "@/components/feature-flags"
@@ -27,5 +28,5 @@ export const viewport: Viewport = { themeColor: "#5c55d5", width: "device-width"
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   await connection()
   const flags = await evaluate({ childPracticeLinks, practiceLinkShowcase, landingPage, masteryBadges })
-  return <html lang="en" className={cn("font-sans", geist.variable)}><body><FeatureFlagsProvider flags={flags}>{children}<Pwa /></FeatureFlagsProvider>{process.env.NODE_ENV === "development" && <VercelToolbar />}</body></html>
+  return <html lang="en" className={cn("font-sans", geist.variable)}><body><FeatureFlagsProvider flags={flags}>{children}<Pwa /></FeatureFlagsProvider>{process.env.NODE_ENV === "development" && <VercelToolbar />}<Analytics /></body></html>
 }
